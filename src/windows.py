@@ -3,6 +3,16 @@ import logging
 
 class Windows:
     def get(self, hidden = False):
+        """
+        Retrieves all windows
+        
+        Args:
+           hidden (bool): If True, include hidden windows. Defaults to False.
+
+        Example:
+        >>> import Automation from rda
+        >>> Automation().windows().get(hidden=True)
+        """
         logging.debug(f"(hidden? {hidden})")
         wins = self._get(hidden)
         logging.debug(f"<-- found {len(wins)} windows")

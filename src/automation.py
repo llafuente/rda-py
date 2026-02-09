@@ -1,4 +1,5 @@
 import time
+import logging
 
 class Automation:
     """
@@ -24,7 +25,6 @@ class Automation:
     blockInputBackground = False  # Blocks user input on background inputMode?
     image_search_sensibility = 4  # Default image search sensibility
 
-
     def __init__(self, key_delay=50, mouse_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
                  blockInputInteractive=True, blockInputBackground=False, image_search_sensibility=4):
         """
@@ -49,6 +49,8 @@ class Automation:
         self.set_image_search_sensibility(image_search_sensibility)
 
     def set_action_delay(self, action_delay):
+        logging.debug('set_action_delay', locals())
+
         self.action_delay= action_delay
 
     def set_mouse_speed(self, mouse_speed):
@@ -74,7 +76,7 @@ class Automation:
         :param text: str - Text to be sent
         """
         if ["Event", "Input", "InputThenPlay", "Play"].index(send_mode) == -1:
-            raise Exception(f"Invalid mode: {send_mode}")
+            raise ValueError(f"Invalid send mode: {send_mode}")
         self.send_mode = send_mode
 
     def set_image_search_sensibility(self, image_search_sensibility):
