@@ -5,6 +5,7 @@ from .base import Base
 from .automation import Automation
 
 class Window(Base):
+    automation: Automation
     """
     Automation a window
     """
@@ -152,6 +153,8 @@ class Window(Base):
         if self.is_alive():
             raise not_close_exception
 
+        return self
+
     def is_alive(self) -> bool:
         """
         Checks if the specified window exists, window can be hidden
@@ -163,6 +166,111 @@ class Window(Base):
 
         return b
 
-    def set_title(self, new_title: str):
+    def is_dead(self):
+        """
+        alias of is_closed
+        """
+        return self.is_closed()
+
+    def is_closed(self) -> bool:
+        """
+        Returns if the window is closed/destroyed/killed
+        """
+        return not self.is_alive()
+
+    def activate(self) -> 'Window':
+        """
+        Activates / Bring to front / foreground window
+
+        *windows knowledge*: It will switch to another Virtual Desktop if needed
+
+        *windows knowledge*: It will fail if workstation is locked or Desktop/Session is non-interactive
+        """
+        self.automation.ahk.win_activate(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        return self
+
+    def is_foreground(self) -> bool:
+        """
+        Returns if the window is the foreground
+        (the window with which the user is currently working)
+        """
+        return self.automation.windows().get_foreground().hwnd == self.hwnd
+
+    def is_activated(self) -> bool:
+        """
+        Alias of <Window.is_foreground>
+        """
+        return self.is_foreground()
+
+    def is_deactivated(self) -> bool:
+        """
+        Opposite of <Window.is_foreground>
+        """
+        return not self.is_foreground()
+
+    def is_background(self) -> bool:
+        """
+        Opposite of <Window.is_foreground>
+        """
+        return not self.is_foreground()
+
+    def set_title(self, new_title: str) -> 'Window':
         self._debug(f"({locals()})")
         self.automation.ahk.win_set_title(new_title, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        return self
+
+    def move(self, x: int, y: int) -> 'Window':
+        """
+        Alias of set_position
+        """
+        return self.set_position(x, y)
+
+    def get_position(self) -> (int, int):
+        """
+        Get window screen position
+        """
+        pos = self.automation.ahk.win_get_position(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        self._debug(f"<-- ({pos})")
+        return pos.x, pos.y
+
+    def set_position(self, x: int, y: int) -> 'Window':
+        """
+        Changes the window position.
+
+        :param x: x screen coordinate
+        :param y: y screen coordinate
+        """
+        self._debug(f"({locals()})")
+        self.automation.ahk.win_move(x=x, y=y, width=None, height=None, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        return self
+
+    def get_size(self):
+        """
+        Get window screen width and height
+        """
+        pos = self.automation.ahk.win_get_position(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        self._debug(f"<-- ({pos})")
+        return pos.width, pos.height
+
+    def set_size(self, width: int, height: int) -> 'Window':
+        """
+        Resizes the window.
+
+        :param width: width
+        :param height: height
+        """
+        self._debug(f"({locals()})")
+        self.automation.ahk.win_move(x=None, y=None, width=width, height=height, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        return self
+
+    def resize(self, width: int, height: int) -> 'Window':
+        """
+        Alias of set_resize
+        """
+        return self.set_size(width, height)

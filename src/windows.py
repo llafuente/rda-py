@@ -42,6 +42,8 @@ class Windows(Base):
         """
         Retrieves a window instance to the foreground window
         (the window with which the user is currently working).
+
+        If workstation is locked, foreground cannot be determined
         """
         win = self.automation.ahk.get_active_window()
         if win is None:
