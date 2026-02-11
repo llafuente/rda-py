@@ -13,7 +13,7 @@ class Window(Base):
         """
         Window title
         """
-        return self.automation.ahk.win_get_title(title=f"ahk_id {self.hwnd}")
+        return self.automation.ahk.win_get_title(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
     _pid: int|None = None
 
     @property
@@ -22,7 +22,7 @@ class Window(Base):
         Process identifier (cached)
         """
         if (self._pid == None):
-            self._pid = self.automation.ahk.win_get_pid(title=f"ahk_id {self.hwnd}")
+            self._pid = self.automation.ahk.win_get_pid(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self._pid
 
     __process:str|None = None
@@ -32,7 +32,8 @@ class Window(Base):
         The name of the process that owns the window (cached).
         """
         if (self.__process == None):
-            self.__process = self.automation.ahk.win_get_process_name(title=f"ahk_id {self.hwnd}")
+            self.__process = self.automation.ahk.win_get_process_name(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+            print(f"process = {self.__process} ahk_id {self.hwnd}")
         return self.__process
 
     __path: str|None = None
@@ -42,7 +43,7 @@ class Window(Base):
         Full path and name of the process that owns the window (cached)
         """
         if (self.__path == None):
-            self.__path = self.automation.ahk.win_get_process_path(title=f"ahk_id {self.hwnd}")
+            self.__path = self.automation.ahk.win_get_process_path(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self.__path
 
     __classNN: str|None = None
@@ -52,7 +53,7 @@ class Window(Base):
         window's class name (cached)
         """
         if (self.__classNN == None):
-            self.__classNN = self.automation.ahk.win_get_class(title=f"ahk_id {self.hwnd}")
+            self.__classNN = self.automation.ahk.win_get_class(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self.__classNN
 
     #: Control parameter from ControlSend. See <RDA_KeyboardSendKeys>
@@ -65,6 +66,12 @@ class Window(Base):
         self.automation = automation
         #: window handle identifier
         self.hwnd = hwnd
+
+    def __str__(self):
+        return f'Window(hwnd = {self.hwnd})'
+
+    def __repr__(self):
+        return self.__str__()
 
     async def wait_until_title_change_from(self, previous_title: str|None = None, timeout: int = -1, delay: int = -1) -> str:
         """
@@ -140,17 +147,23 @@ class Window(Base):
         Waits window to be closed
         """
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
-        self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=timeout/1000)
-        if self.isAlive():
+        self._debug(f"({locals()})")
+
+        self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=timeout/1000, detect_hidden_windows = True)
+        if self.is_alive():
             raise not_close_exception
 
-    def isAlive(self) -> bool:
+    def is_alive(self) -> bool:
         """
         Checks if the specified window exists, window can be hidden
         """
-        x = self.automation.ahk.win_exists(title=f"ahk_id {self.hwnd}")
-        return False if x == None else x
+        x = self.automation.ahk.win_exists(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        b = False if x == None else x
+        self._debug(f"() <-- {b}")
+
+        return b
 
     def set_title(self, new_title: str):
         self._debug(f"({locals()})")
-        self.automation.ahk.win_set_title(new_title, title=f"ahk_id {self.hwnd}")
+        self.automation.ahk.win_set_title(new_title, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
