@@ -1,5 +1,7 @@
+import re
 import time
 import pytest
+import pytest_mock
 import unittest
 import logging
 from src.window import Window
@@ -7,6 +9,7 @@ from src.windows import Windows
 from src.automation import Automation
 import asyncio
 from .timer import Timer
+from .utils import start
 
 # Create a TestCase instance
 t = unittest.TestCase()
@@ -53,6 +56,20 @@ def test_not_found(windows):
     with t.assertRaises(Exception) as cm:
         windows.find_one({"process": "explorer.exe"})
     t.assertEqual(str(cm.exception), "Multiple windows found")
+
+# test regex and hidden process logic
+def test_windows_regex(windows):
+    with t.assertRaises(Exception) as cm:
+        windows.find_one({"process": re.compile("^Explorer.*")}, hidden=True)
+    t.assertEqual(str(cm.exception), "Multiple windows found")
+
+    with t.assertRaises(Exception) as cm:
+        windows.find_one({"title": re.compile("^imposible window title.*")}, hidden=True)
+    t.assertEqual(str(cm.exception), "Window not found")
+
+    with t.assertRaises(Exception) as cm:
+        windows.find_one({"title": "imposible window title"}, hidden=True)
+    t.assertEqual(str(cm.exception), "Window not found")
 
 def test_get_foreground(windows):
     win = windows.get_foreground()
@@ -119,16 +136,29 @@ async def title_change(automation: Automation, windows: Windows):
     t.assertEqual(str(cm.exception), "Timeout after 500ms waiting for title change")
 
     win.close()
-    t.assertFalse(win.isAlive())
+    t.assertFalse(win.is_alive())
 
 def test_title_change(automation, windows):
     asyncio.run(title_change(automation, windows))
 
-
 def test_foreground_exception(mocker, automation, windows):
-    #get_active_window = mocker.patch("src.automation.ahk.get_active_window", None)
-    get_active_window = mocker.patch.object(automation.ahk, "get_active_window", return_value=None)
+    ahk_get_active_window = mocker.patch.object(automation.ahk, "get_active_window", return_value=None)
     with t.assertRaises(Exception) as cm:
         windows.get_foreground()
     t.assertEqual(str(cm.exception), "Could not get foregound window")
-    get_active_window.assert_called_once_with()
+    ahk_get_active_window.assert_called_once_with()
+
+def test_close_exception(mocker: pytest_mock.MockerFixture, request, automation, windows):
+    win = start(automation, request, "notepad.exe")
+
+    # ahk_win_close = mocker.patch.dict(automation.ahk, "win_close", return_value=None)
+    original_win_close = automation.ahk.win_close
+    ahk_win_close = mocker.patch.object(automation.ahk, "win_close", return_value=None)
+    with t.assertRaises(Exception) as cm:
+        win.close()
+    print(cm.exception)
+    t.assertEqual(str(cm.exception), "Could not close window")
+    ahk_win_close.assert_called_once()
+    ahk_win_close.reset_mock()
+    # restore original so Notepad could be closed!
+    automation.ahk.win_close = original_win_close

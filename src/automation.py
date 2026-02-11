@@ -1,15 +1,15 @@
-import time
 import logging
-#import property from "property"
+from ahk import AHK
 
+from .base import Base
+
+# fix circular imports
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .window import Window
     from .windows import Windows
 
-from ahk import AHK
-
-class Automation:
+class Automation(Base):
     """
         Automation configuration and the library entry point.
     """
@@ -199,15 +199,6 @@ class Automation:
         :param press_duration (int): see <Automation.press_duration>
         """
         self.press_duration = press_duration
-
-    @staticmethod
-    def delay(delay):
-        """
-        Method to introduce a delay
-
-        :param delay (int): Delay in milliseconds
-        """
-        time.sleep(delay / 1000)
 
     def windows(self) -> 'Windows':
         """

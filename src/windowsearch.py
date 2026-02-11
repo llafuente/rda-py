@@ -26,6 +26,12 @@ class WindowSearch(Base):
         self.classNN = classNN
         self.path = path
 
+    def __str__(self):
+        return f'WindowSearch({"" if self.title is None else f"title = {self.title},"}{"" if self.process is None else f"process = {self.process},"}{"" if self.classNN is None else f"classNN = {self.classNN}"}{"" if self.path is None else f"path = {self.path},"})'
+
+    def __repr__(self):
+        return self.__str__()
+
     def is_match(self, win: Window) -> bool:
         """
         Tests if given object match the current window.
@@ -47,6 +53,11 @@ class WindowSearch(Base):
 
         if self.process is not None:
             if isinstance(self.process, re.Pattern):
+                p = win.process
+                if p == None:
+                    print("exit because process failed!")
+                    return False
+
                 if not self.process.match(win.process):
                     return False
             else:

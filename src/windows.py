@@ -27,14 +27,14 @@ class Windows(Base):
         return wins
 
     def _get(self, hidden) -> list:
-        windows = self.automation.ahk.list_windows()
+        windows = self.automation.ahk.list_windows(detect_hidden_windows=hidden)
 
         r = []
         for win in windows:
             if win.id != None: #typechecker
                 r.append(Window(self.automation, win.id))
 
-        self._debug(f"{r}")
+        # self._debug(f"{r}")
 
         return r
 
@@ -48,14 +48,16 @@ class Windows(Base):
             raise Exception("Could not get foregound window")
         return Window(self.automation, win.id)
 
-    def _find(self, searchObject: WindowSearch, hidden):
+    def _find(self, search_object: WindowSearch, hidden):
         """Internal method to find windows matching search criteria."""
         result = []
 
-        windows = self.get(hidden)
+        self._debug(search_object)
+
+        windows = self._get(hidden)
 
         for win in windows:
-            if searchObject.is_match(win):
+            if search_object.is_match(win):
                 result.append(win)
 
         return result

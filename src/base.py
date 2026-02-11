@@ -1,7 +1,17 @@
+import time
 import logging
 import inspect
 
 class Base:
+    @staticmethod
+    def delay(delay):
+        """
+        Method to introduce a delay
+
+        :param delay (int): Delay in milliseconds
+        """
+        time.sleep(delay / 1000)
+
     def _debug(self, text: str):
         frame = inspect.currentframe()
         if (frame != None): # typeschecker
