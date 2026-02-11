@@ -31,9 +31,8 @@ class Window(Base):
         """
         The name of the process that owns the window (cached).
         """
-        if (self.__process == None):
+        if (self.__process is None):
             self.__process = self.automation.ahk.win_get_process_name(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
-            print(f"process = {self.__process} ahk_id {self.hwnd}")
         return self.__process
 
     __path: str|None = None

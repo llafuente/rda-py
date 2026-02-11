@@ -21,6 +21,7 @@ class WindowSearch(Base):
     path: str|re.Pattern|None = None
 
     def __init__(self, automation: Automation, title = None, process= None, classNN= None, path= None):
+        self.automation = automation
         self.title = title
         self.process = process
         self.classNN = classNN
@@ -52,12 +53,11 @@ class WindowSearch(Base):
                     return False
 
         if self.process is not None:
-            if isinstance(self.process, re.Pattern):
-                p = win.process
-                if p == None:
-                    print("exit because process failed!")
-                    return False
+            p = win.process
+            if p == None:
+                return False
 
+            if isinstance(self.process, re.Pattern):
                 if not self.process.match(win.process):
                     return False
             else:
@@ -68,16 +68,15 @@ class WindowSearch(Base):
 
         return True
 
-    def wait_until_match(self, win: Window, timeout_ms: int = -1, delay_ms: int = -1):
+    def wait_until_match(self, win: Window, timeout_ms: int = -1, delay_ms: int = -1, timeout_exception=Exception("wait_until_match timeout")) -> bool:
         """
         Waits if given object match the current window.
 
         Match is case insensitive.
         """
-        timeout_ms = timeout_ms if timeout_ms == -1 else self.automation.TIMEOUT
-        delay_ms = delay_ms if delay_ms == -1 else self.automation.DELAY
+        timeout_ms = timeout_ms if timeout_ms != -1 else self.automation.TIMEOUT
+        delay_ms = delay_ms if delay_ms != -1 else self.automation.DELAY
 
 
         self._debug(f"({locals()})")
-        call_repeat_while_return(self.is_match, [win], {}, False, timeout_ms, delay_ms, Exception("wait_until_match timeout"))
-        pass
+        return call_repeat_while_return(self.is_match, [win], {}, False, timeout_ms, delay_ms, timeout_exception)

@@ -1,40 +1,46 @@
+import inspect
 import unittest
-import logging
+import pytest
+import pytest_mock
+
 from src.automation import Automation
 
+# Create a TestCase instance
+t = unittest.TestCase()
 
+@pytest.fixture
+def automation() -> Automation:
+    return Automation()
 
-class TestAutomation(unittest.TestCase):
-    def setUp(self):
-        self.automation = Automation()
+def test_set_key_delay(automation: Automation):
+    automation.set_key_delay(101)
+    t.assertEqual(automation.key_delay, 101)
 
-    def test_set_key_delay(self):
-        self.automation.set_key_delay(101)
-        self.assertEqual(self.automation.key_delay, 101)
+    automation.set_press_duration(101)
+    t.assertEqual(automation.press_duration, 101)
 
-        self.automation.set_press_duration(101)
-        self.assertEqual(self.automation.press_duration, 101)
+    automation.set_mouse_delay(201)
+    t.assertEqual(automation.mouse_delay, 201)
 
-        self.automation.set_mouse_delay(201)
-        self.assertEqual(self.automation.mouse_delay, 201)
+    automation.set_send_mode("Input")
+    t.assertEqual(automation.send_mode, "Input")
 
-        self.automation.set_send_mode("Input")
-        self.assertEqual(self.automation.send_mode, "Input")
+    automation.set_send_mode("Play")
+    t.assertEqual(automation.send_mode, "Play")
 
-        self.automation.set_send_mode("Play")
-        self.assertEqual(self.automation.send_mode, "Play")
+# test set_send_mode exception
+def test_set_send_mode_exception(automation: Automation):
+    with t.assertRaises(ValueError) as cm:
+        automation.set_send_mode("xxx")
+    t.assertEqual(str(cm.exception), "Invalid send mode: xxx")
 
-    # test set_send_mode exception
-    def test_set_send_mode_exception(self):
-        with self.assertRaises(ValueError) as cm:
-            self.automation.set_send_mode("xxx")
-        self.assertEqual(str(cm.exception), "Invalid send mode: xxx")
+def test_unimplemented(automation: Automation):
+    assert automation.UIA == None
+    assert automation.JAB == None
 
-    def test_unimplemented(self):
-        assert self.automation.UIA == None
-        assert self.automation.JAB == None
-        # just for coverage purposes...
-        self.automation.delay(50)
+def test_coverage(automation: Automation, mocker: pytest_mock.MockerFixture):
+    # just for coverage purposes...
+    automation.delay(50)
 
-if __name__ == '__main__':
-    unittest.main()
+    mocker.patch.object(inspect, "currentframe", return_value=None)
+    automation._debug("xx")
