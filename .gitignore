@@ -4,3 +4,9 @@ __pycache__
 htmlcov
 # test logs
 latest.log
+
+# docs
+.doctrees
+_sources
+_static
+/docs/html
