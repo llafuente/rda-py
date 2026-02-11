@@ -1,6 +1,6 @@
 # init
 ```bash
-pip install pytest pytest-cov sphinx sphinx_rtd_theme ahk ahk[binary]
+pip install pytest pytest-cov pytest-mock sphinx sphinx_rtd_theme ahk ahk[binary]
 ```
 
 # static typing test (mypy)

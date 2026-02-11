@@ -123,3 +123,12 @@ async def title_change(automation: Automation, windows: Windows):
 
 def test_title_change(automation, windows):
     asyncio.run(title_change(automation, windows))
+
+
+def test_foreground_exception(mocker, automation, windows):
+    #get_active_window = mocker.patch("src.automation.ahk.get_active_window", None)
+    get_active_window = mocker.patch.object(automation.ahk, "get_active_window", return_value=None)
+    with t.assertRaises(Exception) as cm:
+        windows.get_foreground()
+    t.assertEqual(str(cm.exception), "Could not get foregound window")
+    get_active_window.assert_called_once_with()
