@@ -44,7 +44,7 @@ def test_get_visible_windows(windows):
         t.assertIsNotNone(window.process)
         t.assertIsNotNone(window.path)
         t.assertIsNotNone(window.classNN)
-        
+
 def test_not_found(windows):
     with t.assertRaises(Exception) as cm:
         windows.find_one({"process": "xxx.exe"})
@@ -77,7 +77,7 @@ async def wait_until_title_change_to(win: Window, new_title: str):
     t.assertGreater(timer.elapsed_ms, 2000, "at least elapsed 2s")
     t.assertEqual(win.title, new_title)
 
-async def wait_until_title_change_from(win: Window):    
+async def wait_until_title_change_from(win: Window):
     previous_title = win.title
     with Timer() as timer:
         await win.wait_until_title_change_from()
@@ -94,7 +94,7 @@ async def title_change(automation: Automation, windows: Windows):
     win = windows.find_one({"process": "notepad.exe"})
     t.assertIsNotNone(win)
     t.assertIsNotNone(win.title)
-    
+
     win2 = automation.window_from_hwnd(win.hwnd)
     t.assertEqual(win.title, win2.title)
 
@@ -103,12 +103,23 @@ async def title_change(automation: Automation, windows: Windows):
         change_title(win, "xxx"),
         wait_until_title_change_to(win, "xxx")
     )
-    
+
     await asyncio.gather(
         change_title(win, "xxx2"),
         wait_until_title_change_from(win)
     )
+
+    # test exceptions
+    with t.assertRaises(Exception) as cm:
+        await win.wait_until_title_change_from(timeout=500)
+    t.assertEqual(str(cm.exception), "Timeout after 500ms waiting for title change")
+
+    with t.assertRaises(Exception) as cm:
+        await win.wait_until_title_change_to(new_title="imposible title", timeout=500)
+    t.assertEqual(str(cm.exception), "Timeout after 500ms waiting for title change")
+
     win.close()
+    t.assertFalse(win.isAlive())
 
 def test_title_change(automation, windows):
     asyncio.run(title_change(automation, windows))
