@@ -135,9 +135,21 @@ class Window(Base):
 
         raise RuntimeError("Unreachable code reached")
 
-    def close(self, timeout: int = -1):
+    def close(self, timeout: int = -1, not_close_exception = Exception("Could not close window")):
+        """
+        Waits window to be closed
+        """
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=timeout/1000)
+        if self.isAlive():
+            raise not_close_exception
+
+    def isAlive(self) -> bool:
+        """
+        Checks if the specified window exists, window can be hidden
+        """
+        x = self.automation.ahk.win_exists(title=f"ahk_id {self.hwnd}")
+        return False if x == None else x
 
     def set_title(self, new_title: str):
         self._debug(f"({locals()})")
