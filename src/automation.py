@@ -2,121 +2,100 @@ import time
 import logging
 #import property from "property"
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .window import Window
+    from .windows import Windows
+
+from ahk import AHK
+
 class Automation:
     """
         Automation configuration and the library entry point.
     """
 
-    # Constants
-    TIMEOUT = 60000
-    """
-    :type: int
-    Default timeout, in milliseconds
-    """
-    DELAY = 250
-    """
-    :type: int
-    Default delay, in milliseconds
-    """
-    HIGHLIGHT_TIME = 1000
-    """
-    :type: int
-    Default highlight time, in milliseconds
-    """
+    #: AutoHotKey library
+    ahk: AHK = AHK()
 
-    # Properties
-    key_delay = 50
-    """
-    :type: int
-    number - Delay between key strokes, in milliseconds.
+    #: Default timeout, in milliseconds
+    TIMEOUT: int = 60000
 
-    Use -1 for no delay at all and 0 for the smallest possible delay
+    #: Default delay, in milliseconds
+    DELAY: int = 250
 
-    See: https://www.autohotkey.com/docs/commands/SetKeyDelay.htm
-    """
-    press_duration = -1
-    """
-    :type: int
-    Certain games and other specialized applications may require a
-    delay inside       each keystroke; that is, after the press of the key
-    but before its release.
+    #: Default highlight time, in milliseconds
+    HIGHLIGHT_TIME: int = 1000
 
-    Specify -1 for no delay at all or 0 for the smallest possible delay
-    (however, if the Play parameter is present, both 0 and -1 produce no delay).
+    #: Delay between key strokes, in milliseconds.
+    #:
+    #: Use -1 for no delay at all and 0 for the smallest possible delay
+    #:
+    #: See: https://www.autohotkey.com/docs/commands/SetKeyDelay.htm
+    key_delay: int = 50
 
-    See: https://www.autohotkey.com/docs/commands/SetKeyDelay.htm
-    """
-    mouse_delay = 50
-    """
-    :type: int
-    Delay between mouse strokes.
+    #: Certain games and other specialized applications may require a delay inside each keystroke; that is, after the press of the key
+    #: but before its release.
+    #:
+    #: Specify -1 for no delay at all or 0 for the smallest possible delay (however, if the Play parameter is present, both 0 and -1 produce no delay).
+    #:
+    #: See: https://www.autohotkey.com/docs/commands/SetKeyDelay.htm
+    press_duration: int = -1
 
-    Time in milliseconds.
+    #: Delay between mouse strokes.
+    #:
+    #: Time in milliseconds.
+    #:
+    #: Specify -1 for no delay at all or 0 for the smallest possible delay
+    #:
+    #: See: https://www.autohotkey.com/docs/v1/lib/SetMouseDelay.htm
 
-    Specify -1 for no delay at all or 0 for the smallest possible delay
+    mouse_delay: int = 50
 
-    See: https://www.autohotkey.com/docs/v1/lib/SetMouseDelay.htm
-    """
-    input_mode = "interactive"
-    """
-    :type: string
-    string - Configures how input is going to be sent
+    #: Configures how input is going to be sent
+    #:
+    #: Valid values:
+    #:
+    #: * interactive
+    #:
+    #: * background (non-interactive)
+    input_mode: str = "interactive"
 
-    Valid values:
+    #: Makes Send synonymous with SendInput or SendPlay rather than the
+    #: default (SendEvent). Also makes Click and MouseMove/Click/Drag use the
+    #: specified method.
+    #:
+    #: Valid values:
+    #:
+    #: * Event (*default*)
+    #:
+    #: * Input
+    #:
+    #: * InputThenPlay
+    #:
+    #: * Play
+    #:
+    #: See: https://www.autohotkey.com/docs/commands/SendMode.htm
+    send_mode: str = "Event"
 
-    * interactive
-
-    * background (non-interactive)
-    """
-    send_mode = "Event"
-    """
-    :type: string
-    string - Makes Send synonymous with SendInput or SendPlay rather than the
-    default (SendEvent). Also makes Click and MouseMove/Click/Drag use the
-    specified method.
-
-    Valid values:
-
-    * Event (*default*)
-
-    * Input
-
-    * InputThenPlay
-
-    * Play
-
-    See: https://www.autohotkey.com/docs/commands/SendMode.htm
-    """
+    #: Delay after each action performed by the library.
+    #:
+    #: This value allows you to adapt to performance degrade in long running
+    #: applications and also helps you to slow down a bot to debug.
     action_delay = 100
-    """
-    :type: int
-    Delay after each action performed by the library.
 
-    This value allows you to adapt to performance degrade in long running
-    applications and also helps you to slow down a bot to debug.
-    """
+    #: number - Default mouse movement speed
+    #:
+    #: See: https://www.autohotkey.com/docs/v1/lib/MouseMove.htm
     mouse_speed = 2
-    """
-    :type: int
-    number - Default mouse movement speed
 
-    See: https://www.autohotkey.com/docs/v1/lib/MouseMove.htm
-    """
-    blockInputInteractive = True
-    """
-    :type: boolean
-    Blocks user input on interactive inputMode ?
-    """
-    blockInputBackground = False
-    """
-    :type: boolean
-    Blocks user input on background inputMode ?
-    """
-    image_search_sensibility = 4
-    """
-    :type: int
-    Default image search sensibility. See "*n (variation)" at https://www.autohotkey.com/docs/v1/lib/ImageSearch.htm#Parameters
-    """
+    #: Blocks user input on interactive inputMode ?
+    block_input_interactive: bool = True
+
+    #: Blocks user input on background inputMode ?
+    block_input_background: bool = False
+
+    #: Default image search sensibility. See "\*n (variation)" at https://www.autohotkey.com/docs/v1/lib/ImageSearch.htm#Parameters
+    image_search_sensibility: int = 4
 
     @property
     def UIA(self):
@@ -124,7 +103,7 @@ class Automation:
         Microsoft UI Automation (lazy initialization)
         """
         return None
-    
+
     @property
     def JAB(self):
         """
@@ -133,11 +112,11 @@ class Automation:
         return None
 
     def __init__(self, key_delay=50, mouse_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
-                 blockInputInteractive=True, blockInputBackground=False, image_search_sensibility=4):
+                 block_input_interactive=True, block_input_background=False, image_search_sensibility=4):
         """
         Constructor to initialize all properties
-        
-        :param key_delay (int): Delay between key strokes, in milliseconds
+
+        :param: key_delay (int): Delay between key strokes, in milliseconds
         :param mouse_delay: int - Delay between mouse strokes. Time in milliseconds
         :param send_mode: str - Configures how input is going to be sent ("interactive" or "background")
         :param action_delay: int - Delay after each action performed by the library
@@ -152,14 +131,15 @@ class Automation:
         self.set_action_delay(action_delay)
         self.set_mouse_speed(mouse_speed)
 
-        #Automation.block_input(input_mode="interactive") if blockInputInteractive else Automation.unblock_input(input_mode="interactive")
-        #Automation.block_input(input_mode="background") if blockInputBackground else Automation.unblock_input(input_mode="background")
+        self.block_input_interactive = block_input_interactive
+        self.block_input_background = block_input_background
+
         self.set_image_search_sensibility(image_search_sensibility)
 
     def set_action_delay(self, action_delay):
         """
         Sets how much time we wait after performing an action: SendKeys/Click
-        
+
         :param action_delay (int): Delay after each action performed by the library
         """
         logging.debug('set_action_delay', locals())
@@ -178,7 +158,7 @@ class Automation:
         """
         Function to simulate SetKeyDelay in AutoHotkey
 
-        :param key_delay: int - Delay between key strokes, in milliseconds
+        :param key_delay (int): Delay between key strokes, in milliseconds
         """
         self.key_delay = key_delay
 
@@ -186,7 +166,7 @@ class Automation:
         """
         Sets mouse delay.
 
-        :param delay: int - mouse_delay
+        :param mouse_delay (int): mouse_delay
         """
         self.mouse_delay = mouse_delay
 
@@ -195,24 +175,56 @@ class Automation:
         Makes Send synonymous with SendInput or SendPlay rather than the default (SendEvent).
         Also makes Click and MouseMove/Click/Drag use the specified method.
 
-        :param send_mode: str - see <Automation.sendMode>
+        :param send_mode (str): See <Automation.sendMode>
         """
-        if ["Event", "Input", "InputThenPlay", "Play"].index(send_mode) == -1:
+        try:
+            ["Event", "Input", "InputThenPlay", "Play"].index(send_mode)
+        except:
             raise ValueError(f"Invalid send mode: {send_mode}")
+
         self.send_mode = send_mode
 
     def set_image_search_sensibility(self, image_search_sensibility):
         """
         Configures default image search sensibility
-        :param image_search_sensibility: number - see <Automation.image_search_sensibility>
-        :param confidence: float - Confidence level of the match (optional)
+
+        :param image_search_sensibility (int): see <Automation.image_search_sensibility>
         """
         self.image_search_sensibility = image_search_sensibility
+
+    def set_press_duration(self, press_duration):
+        """
+        Sets press duration.
+
+        :param press_duration (int): see <Automation.press_duration>
+        """
+        self.press_duration = press_duration
 
     @staticmethod
     def delay(delay):
         """
         Method to introduce a delay
-        :param delay: int - Delay in milliseconds
+
+        :param delay (int): Delay in milliseconds
         """
         time.sleep(delay / 1000)
+
+    def windows(self) -> 'Windows':
+        """
+        Get operations over Windows at OS level
+        :returns Windows
+        """
+        from .windows import Windows
+        return Windows(self)
+
+    def window_from_hwnd(self, hwnd: str) -> 'Window':
+        """
+        Creates a Window given a window handle
+
+        :param hwnd (str): Window handle identifier
+
+        :return: Window instance
+        :rtype: Window
+        """
+        from .window import Window
+        return Window(self, hwnd)
