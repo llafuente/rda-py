@@ -44,16 +44,6 @@ class Automation(Base):
     #: See: https://www.autohotkey.com/docs/commands/SetKeyDelay.htm
     press_duration: int = -1
 
-    #: Delay between mouse strokes.
-    #:
-    #: Time in milliseconds.
-    #:
-    #: Specify -1 for no delay at all or 0 for the smallest possible delay
-    #:
-    #: See: https://www.autohotkey.com/docs/v1/lib/SetMouseDelay.htm
-
-    mouse_delay: int = 50
-
     #: Configures how input is going to be sent
     #:
     #: Valid values:
@@ -84,6 +74,7 @@ class Automation(Base):
     #:
     #: This value allows you to adapt to performance degrade in long running
     #: applications and also helps you to slow down a bot to debug.
+    #: NOTE: this also applies to mouse actions (mouse_delay is removed)
     action_delay: int = 100
 
     #: number - Default mouse movement speed
@@ -116,18 +107,17 @@ class Automation(Base):
 
 
     def __str__(self):
-        return f'Automation(key_delay = {self.key_delay}, press_duration = {self.press_duration}, mouse_delay = {self.mouse_delay}, input_mode = {self.input_mode}, send_mode = {self.send_mode}, action_delay = {self.action_delay}, mouse_speed = {self.mouse_speed}, block_input_interactive = {self.block_input_interactive}, block_input_background = {self.block_input_background}, image_search_sensibility = {self.image_search_sensibility})'
+        return f'Automation(key_delay = {self.key_delay}, press_duration = {self.press_duration}, input_mode = {self.input_mode}, send_mode = {self.send_mode}, action_delay = {self.action_delay}, mouse_speed = {self.mouse_speed}, block_input_interactive = {self.block_input_interactive}, block_input_background = {self.block_input_background}, image_search_sensibility = {self.image_search_sensibility})'
 
     def __repr__(self):
         return self.__str__()
 
-    def __init__(self, key_delay=50, mouse_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
+    def __init__(self, key_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
                  block_input_interactive=True, block_input_background=False, image_search_sensibility=4):
         """
         Constructor to initialize all properties
 
         :param: key_delay (int): Delay between key strokes, in milliseconds
-        :param: mouse_delay(int): Delay between mouse strokes. Time in milliseconds
         :param: send_mode(str): Configures how input is going to be sent ("interactive" or "background")
         :param: action_delay(int): Delay after each action performed by the library
         :param: mouse_speed(int): Default mouse movement speed
@@ -136,7 +126,6 @@ class Automation(Base):
         :param: image_search_sensibility(number): see <Automation.imageSearchSensibility>
         """
         self.set_key_delay(key_delay)
-        self.set_mouse_delay(mouse_delay)
         self.set_send_mode(send_mode)
         self.set_action_delay(action_delay)
         self.set_mouse_speed(mouse_speed)
@@ -185,14 +174,6 @@ class Automation(Base):
         :param key_delay (int): Delay between key strokes, in milliseconds
         """
         self.key_delay = key_delay
-
-    def set_mouse_delay(self, mouse_delay):
-        """
-        Sets mouse delay.
-
-        :param mouse_delay (int): mouse_delay
-        """
-        self.mouse_delay = mouse_delay
 
     def set_send_mode(self, send_mode):
         """
