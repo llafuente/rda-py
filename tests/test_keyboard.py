@@ -48,8 +48,8 @@ def test_keyboard_sendkeys(mocker: pytest_mock.MockerFixture, request, automatio
 
 
     automation.ahk.set_clipboard('')
+    win.minimize()
     automation.set_input_mode('background')
-    win.activate()
 
     with t.assertRaises(ValueError) as cm:
         keyboard.send_keys('?')
@@ -61,8 +61,14 @@ def test_keyboard_sendkeys(mocker: pytest_mock.MockerFixture, request, automatio
 
     keyboard.send_keys('{CTRL down}a{CTRL up}', win.hwnd, 'RichEditD2DPT1')
     keyboard.type('hello world', win.hwnd, 'RichEditD2DPT1')
-    keyboard.send_keys('{CTRL down}a{CTRL up}{CTRL down}c{CTRL up}', win.hwnd, 'RichEditD2DPT1')
 
+    # NOTE! notepad.exe CTRL+a works
+    # NOTE! notepad.exe refuse to copy to clipboard while minimized!!!
+    win.maximize()
+    keyboard.send_keys('{CTRL down}a{CTRL up}{CTRL down}c{CTRL up}', win.hwnd, 'RichEditD2DPT1')
+    win.minimize()
+
+    # automation.ahk.msg_box("?")
     data = automation.ahk.get_clipboard()
     t.assertEqual(data, 'hello world')
 
@@ -98,6 +104,7 @@ def test_keyboard_sendkeys(mocker: pytest_mock.MockerFixture, request, automatio
 
     keyboard.send_keys(keyboard.get_text_to_sendkeys('hello world!', 67699721), win.hwnd, 'RichEditD2DPT1')
 
+    win.restore()
     automation.set_input_mode('interactive')
     keyboard.send_keys('{CTRL down}a{CTRL up}{CTRL down}c{CTRL up}')
     t.assertEqual(automation.ahk.get_clipboard(), 'hello world!')

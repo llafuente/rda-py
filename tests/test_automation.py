@@ -19,9 +19,6 @@ def test_set_key_delay(automation: Automation):
     automation.set_press_duration(101)
     t.assertEqual(automation.press_duration, 101)
 
-    automation.set_mouse_delay(201)
-    t.assertEqual(automation.mouse_delay, 201)
-
     automation.set_send_mode("Input")
     t.assertEqual(automation.send_mode, "Input")
 

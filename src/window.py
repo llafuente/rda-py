@@ -5,10 +5,12 @@ from .base import Base
 from .automation import Automation
 
 class Window(Base):
+    """
+    Single window operations at OS level
+    """
+    #: back ref to automation
     automation: Automation
-    """
-    Automation a window
-    """
+
     @property
     def title(self) -> str:
         """
@@ -282,3 +284,15 @@ class Window(Base):
         Alias of set_resize
         """
         return self.set_size(width, height)
+
+    def minimize(self):
+        self._debug(f"({locals()})")
+        self.automation.ahk.win_minimize(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+    def restore(self):
+        self._debug(f"({locals()})")
+        self.automation.ahk.win_restore(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+    def maximize(self):
+        self._debug(f"({locals()})")
+        self.automation.ahk.win_maximize(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
