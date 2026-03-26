@@ -28,6 +28,23 @@ src.window module
    :show-inheritance:
    :undoc-members:
 
+src.keyboard module
+------------------
+
+.. automodule:: src.keyboard
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+src.mouse module
+------------------
+
+.. automodule:: src.mouse
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+
 
 src.utils module
 ------------------

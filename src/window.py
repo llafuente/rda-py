@@ -56,6 +56,14 @@ class Window(Base):
             self.__classNN = self.automation.ahk.win_get_class(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self.__classNN
 
+    @property
+    def alive(self) -> str:
+        """
+        Alias of is_alive
+        """
+        return self.is_alive()
+
+
     #: Control parameter from ControlSend. See <RDA_KeyboardSendKeys>
     #:
     #: Only apply when <RDA_Automation.inputMode> is background
@@ -142,15 +150,15 @@ class Window(Base):
 
         raise RuntimeError("Unreachable code reached")
 
-    def close(self, timeout: int = -1, not_close_exception = Exception("Could not close window")):
+    def close(self, timeout: int = -1, not_close_exception: Exception|None = Exception("Could not close window")):
         """
-        Waits window to be closed
+        Closes window and wait until the specified window does not exist.
         """
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         self._debug(f"({locals()})")
 
         self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=timeout/1000, detect_hidden_windows = True)
-        if self.is_alive():
+        if self.is_alive() and not_close_exception is not None:
             raise not_close_exception
 
         return self

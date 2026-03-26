@@ -14,7 +14,7 @@ from .utils import start
 # Create a TestCase instance
 t = unittest.TestCase()
 
-def test_xxx(caplog: pytest.LogCaptureFixture):
+def test_windows_xxx(caplog: pytest.LogCaptureFixture):
 
     print(len(caplog.records))
 
@@ -27,13 +27,13 @@ def automation() -> Automation:
 def windows(automation) -> Windows:
     return automation.windows()
 
-def test_get_all_windows(windows):
+def test_windows_get_all_windows(windows):
 
     # Assuming there are at least one window on the system
     all_windows = windows.get(hidden=True)
     t.assertGreater(len(all_windows), 0)
 
-def test_get_visible_windows(windows):
+def test_windows_get_visible_windows(windows):
     # Assuming there are at least one visible window on the system
     visible_windows = windows.get(hidden=False)
     t.assertGreater(len(visible_windows), 0)
@@ -42,13 +42,14 @@ def test_get_visible_windows(windows):
         print(window)
         #t.assertTrue(window.size)
         # can be empty
+        t.assertIsNotNone(window.hwnd)
         t.assertIsNotNone(window.title)
         t.assertIsNotNone(window.pid)
         t.assertIsNotNone(window.process)
         t.assertIsNotNone(window.path)
         t.assertIsNotNone(window.classNN)
 
-def test_not_found(windows):
+def test_windows_not_found(windows):
     with t.assertRaises(Exception) as cm:
         windows.find_one({"process": "xxx.exe"})
     t.assertEqual(str(cm.exception), "Window not found")
@@ -58,7 +59,7 @@ def test_not_found(windows):
     t.assertEqual(str(cm.exception), "Multiple windows found")
 
 # test regex and hidden process logic
-def test_windows_regex(windows):
+def test_windows_windows_regex(windows):
     with t.assertRaises(Exception) as cm:
         windows.find_one({"process": re.compile("^Explorer.*")}, hidden=True)
     t.assertEqual(str(cm.exception), "Multiple windows found")
@@ -71,7 +72,7 @@ def test_windows_regex(windows):
         windows.find_one({"title": "imposible window title"}, hidden=True)
     t.assertEqual(str(cm.exception), "Window not found")
 
-def test_get_foreground(windows):
+def test_windows_get_foreground(windows):
     win = windows.get_foreground()
     t.assertTrue(win.hwnd)
 
@@ -138,17 +139,17 @@ async def title_change(automation: Automation, windows: Windows):
     win.close()
     t.assertFalse(win.is_alive())
 
-def test_title_change(automation, windows):
+def test_windows_title_change(automation, windows):
     asyncio.run(title_change(automation, windows))
 
-def test_foreground_exception(mocker, automation, windows):
+def test_windows_foreground_exception(mocker, automation, windows):
     ahk_get_active_window = mocker.patch.object(automation.ahk, "get_active_window", return_value=None)
     with t.assertRaises(Exception) as cm:
         windows.get_foreground()
     t.assertEqual(str(cm.exception), "Could not get foregound window")
     ahk_get_active_window.assert_called_once_with()
 
-def test_close_exception(mocker: pytest_mock.MockerFixture, request, automation, windows):
+def test_windows_close_exception(mocker: pytest_mock.MockerFixture, request, automation, windows):
     win = start(automation, request, "notepad.exe")
 
     # ahk_win_close = mocker.patch.dict(automation.ahk, "win_close", return_value=None)

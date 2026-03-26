@@ -1,4 +1,5 @@
 import logging
+import time
 from ahk import AHK
 
 from .base import Base
@@ -7,7 +8,9 @@ from .base import Base
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .window import Window
+    from .mouse import Mouse
     from .windows import Windows
+    from .keyboard import Keyboard
 
 class Automation(Base):
     """
@@ -81,12 +84,12 @@ class Automation(Base):
     #:
     #: This value allows you to adapt to performance degrade in long running
     #: applications and also helps you to slow down a bot to debug.
-    action_delay = 100
+    action_delay: int = 100
 
     #: number - Default mouse movement speed
     #:
     #: See: https://www.autohotkey.com/docs/v1/lib/MouseMove.htm
-    mouse_speed = 2
+    mouse_speed: int = 2
 
     #: Blocks user input on interactive inputMode ?
     block_input_interactive: bool = True
@@ -111,19 +114,26 @@ class Automation(Base):
         """
         return None
 
+
+    def __str__(self):
+        return f'Automation(key_delay = {self.key_delay}, press_duration = {self.press_duration}, mouse_delay = {self.mouse_delay}, input_mode = {self.input_mode}, send_mode = {self.send_mode}, action_delay = {self.action_delay}, mouse_speed = {self.mouse_speed}, block_input_interactive = {self.block_input_interactive}, block_input_background = {self.block_input_background}, image_search_sensibility = {self.image_search_sensibility})'
+
+    def __repr__(self):
+        return self.__str__()
+
     def __init__(self, key_delay=50, mouse_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
                  block_input_interactive=True, block_input_background=False, image_search_sensibility=4):
         """
         Constructor to initialize all properties
 
         :param: key_delay (int): Delay between key strokes, in milliseconds
-        :param mouse_delay: int - Delay between mouse strokes. Time in milliseconds
-        :param send_mode: str - Configures how input is going to be sent ("interactive" or "background")
-        :param action_delay: int - Delay after each action performed by the library
-        :param mouse_speed: int - Default mouse movement speed
-        :param blockInputInteractive: bool - Blocks user input on interactive inputMode?
-        :param blockInputBackground: bool - Blocks user input on background inputMode?
-        :param image_search_sensibility: number - see <Automation.imageSearchSensibility>
+        :param: mouse_delay(int): Delay between mouse strokes. Time in milliseconds
+        :param: send_mode(str): Configures how input is going to be sent ("interactive" or "background")
+        :param: action_delay(int): Delay after each action performed by the library
+        :param: mouse_speed(int): Default mouse movement speed
+        :param: blockInputInteractive(bool): Blocks user input on interactive inputMode?
+        :param: blockInputBackground(bool): Blocks user input on background inputMode?
+        :param: image_search_sensibility(number): see <Automation.imageSearchSensibility>
         """
         self.set_key_delay(key_delay)
         self.set_mouse_delay(mouse_delay)
@@ -135,6 +145,20 @@ class Automation(Base):
         self.block_input_background = block_input_background
 
         self.set_image_search_sensibility(image_search_sensibility)
+
+    def set_input_mode(self, input_mode: str):
+        """
+        Sets the how input will be sent
+
+        :param input_mode (str): <Automation.input_mode>
+        """
+        try:
+            ["interactive", "background"].index(input_mode)
+        except:
+            raise ValueError(f"Invalid input mode: {input_mode}")
+        self.input_mode = input_mode
+
+        return self
 
     def set_action_delay(self, action_delay):
         """
@@ -208,6 +232,14 @@ class Automation(Base):
         from .windows import Windows
         return Windows(self)
 
+    def keyboard(self) -> 'Keyboard':
+        from .keyboard import Keyboard
+        return Keyboard(self)
+
+    def mouse(self) -> 'Mouse':
+        from .mouse import Mouse
+        return Mouse(self)
+
     def window_from_hwnd(self, hwnd: str) -> 'Window':
         """
         Creates a Window given a window handle
@@ -219,3 +251,6 @@ class Automation(Base):
         """
         from .window import Window
         return Window(self, hwnd)
+
+    def action_performed(self):
+        time.sleep(self.action_delay / 1000)
