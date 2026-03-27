@@ -4,6 +4,7 @@ from .automation import Automation
 from .window import Window
 from .windowsearch import WindowSearch
 from .base import Base
+from typing import Union
 
 class Windows(Base):
     def __init__(self, automation: Automation):
@@ -64,7 +65,7 @@ class Windows(Base):
 
         return result
 
-    def find_one(self, search_obj: WindowSearch|dict, hidden=False) -> Window:
+    def find_one(self, search_obj: Union[WindowSearch, dict], hidden=False) -> Window:
         """
         Searches for a single window that matches the given properties.
 

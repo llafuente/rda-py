@@ -1,8 +1,11 @@
+import logging
 import asyncio
 import time
 
 from .base import Base
 from .automation import Automation
+from typing import Union
+
 
 class Window(Base):
     """
@@ -17,10 +20,10 @@ class Window(Base):
         Window title
         """
         return self.automation.ahk.win_get_title(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
-    _pid: int|None = None
+    _pid: Union[int, None] = None
 
     @property
-    def pid(self) -> int|None:
+    def pid(self) -> Union[int, None]:
         """
         Process identifier (cached)
         """
@@ -28,9 +31,9 @@ class Window(Base):
             self._pid = self.automation.ahk.win_get_pid(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self._pid
 
-    __process:str|None = None
+    __process:Union[str, None] = None
     @property
-    def process(self) -> str|None:
+    def process(self) -> Union[str, None]:
         """
         The name of the process that owns the window (cached).
         """
@@ -38,9 +41,9 @@ class Window(Base):
             self.__process = self.automation.ahk.win_get_process_name(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self.__process
 
-    __path: str|None = None
+    __path: Union[str, None] = None
     @property
-    def path(self) -> str|None:
+    def path(self) -> Union[str, None]:
         """
         Full path and name of the process that owns the window (cached)
         """
@@ -48,7 +51,7 @@ class Window(Base):
             self.__path = self.automation.ahk.win_get_process_path(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         return self.__path
 
-    __classNN: str|None = None
+    __classNN: Union[str, None] = None
     @property
     def classNN(self) -> str:
         """
@@ -69,7 +72,7 @@ class Window(Base):
     #: Control parameter from ControlSend. See <RDA_KeyboardSendKeys>
     #:
     #: Only apply when <RDA_Automation.inputMode> is background
-    defaultBackgroundControl: str|None = None # TODO if possible! empty string
+    defaultBackgroundControl: Union[str, None] = None # TODO if possible! empty string
 
     def __init__(self, automation: Automation, hwnd: str):
         #: Automation config (back pointer)
@@ -83,7 +86,7 @@ class Window(Base):
     def __repr__(self):
         return self.__str__()
 
-    async def wait_until_title_change_from(self, previous_title: str|None = None, timeout: int = -1, delay: int = -1) -> str:
+    async def wait_until_title_change_from(self, previous_title: Union[str, None] = None, timeout: int = -1, delay: int = -1) -> str:
         """
         Waits until title change from the giving one with timeout and error handling
 
@@ -120,7 +123,7 @@ class Window(Base):
 
         raise RuntimeError("Unreachable code reached")
 
-    async def wait_until_title_change_to(self, new_title: str|None = None, timeout: int = -1, delay: int = -1) -> str:
+    async def wait_until_title_change_to(self, new_title: Union[str, None] = None, timeout: int = -1, delay: int = -1) -> str:
         """
         Waits until title change from the giving one with timeout and error handling
 
@@ -152,7 +155,7 @@ class Window(Base):
 
         raise RuntimeError("Unreachable code reached")
 
-    def close(self, timeout: int = -1, not_close_exception: Exception|None = Exception("Could not close window")):
+    def close(self, timeout: int = -1, not_close_exception: Union[Exception, None] = Exception("Could not close window")):
         """
         Closes window and wait until the specified window does not exist.
         """
@@ -296,3 +299,143 @@ class Window(Base):
     def maximize(self):
         self._debug(f"({locals()})")
         self.automation.ahk.win_maximize(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+
+    #
+    # mouse operations
+    #
+
+    def mouse_move2(self, x: int, y: int) -> 'Window':
+        """
+        Moves mouse cursor to a position given window position
+
+        :param x: window x coordinate
+        :param y: window x coordinate
+
+        :return: Window for chaining
+        """
+        mouse = self.automation.mouse()
+        self.activate()
+        x2, y2 = self.get_position()
+        mouse.move_to2(x + x2, y + y2)
+        return self
+
+    def click2(self, x: int, y: int) -> "Window":
+        """
+        Performs a left click at given window position.
+
+        :param x: window x coordinate
+        :param y: window x coordinate
+
+        :return: Window for chaining
+        """
+        logging.debug(f'click2({x}, {y})')
+
+        mouse = self.automation.mouse()
+        self.activate()
+        x2, y2 = self.get_position()
+        mouse.click(x + x2, y + y2)
+        return self
+
+    def right_click2(self, x: int = 9999, y: int = 9999) -> "Window":
+        """
+        Performs a right click at given window position.
+
+        :param x: window x coordinate
+        :param y: window x coordinate
+
+        :return: Window for chaining
+        """
+        logging.debug(f'right_click2({x}, {y})')
+
+        mouse = self.automation.mouse()
+        self.activate()
+        x2, y2 = self.get_position()
+        mouse.right_click2(x + x2, y + y2)
+        return self
+
+    def double_click2(self, x: int = 9999, y: int = 9999) -> "Window":
+        """
+        Performs a left double click at given window position.
+
+        :param x: window x coordinate
+        :param y: window x coordinate
+
+        :return: Window for chaining
+        """
+        logging.debug(f'double_click2({x}, {y})')
+
+        mouse = self.automation.mouse()
+        self.activate()
+        x2, y2 = self.get_position()
+        mouse.double_click2(x + x2, y + y2)
+        return self
+
+
+
+    #
+    # keyboard
+    #
+
+    def type(self, text: str) -> 'Window':
+        """
+        Sends given text (literally) as keystrokes
+
+        :remarks:
+          This method can disclosure information, use <Keyboard.send_password>
+
+        :remarks:
+          use Raw mode: https://www.autohotkey.com/docs/v1/lib/Send.htm#Raw
+
+        :param text: text.
+
+        :return: Window for chaining
+        """
+        self.automation.keyboard().type(text, self.hwnd, self.defaultBackgroundControl)
+        return self
+
+
+    def type_password(self, password: str) -> 'Window':
+        """
+        Sends given password (literally) as keystrokes
+
+        :remarks:
+          This method can disclosure information, use <Keyboard.send_password>
+
+        :remarks:
+          use Raw mode: https://www.autohotkey.com/docs/v1/lib/Send.htm#Raw
+
+        :param password: password.
+
+        :return: Window for chaining
+        """
+        self.automation.keyboard().type_password(password, self.hwnd, self.defaultBackgroundControl)
+        return self
+
+    def send_keys(self, keys: str) -> 'Window':
+        """
+        Sends simulated keystrokes
+
+        :remarks:
+          This method can disclosure information, use <Keyboard.send_password>
+
+        :param keys: keys.
+
+        :return: Window for chaining
+        """
+        self.automation.keyboard().send_keys(keys, self.hwnd, self.defaultBackgroundControl)
+        return self
+
+    def send_password(self, password: str) -> 'Window':
+        """
+        It's an alias of <Keyboard.sendKeys> but just log the length
+
+        :remarks:
+          This method can disclosure information, use <Keyboard.send_password>
+
+        :param password: password.
+
+        :return: Window for chaining
+        """
+        self.automation.keyboard().send_password(password, self.hwnd, self.defaultBackgroundControl)
+        return self

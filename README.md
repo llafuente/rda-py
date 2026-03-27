@@ -16,7 +16,7 @@ still in development, no usable.
 ### Initialize/start project
 
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 ### static typing test (mypy)

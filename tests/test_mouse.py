@@ -25,6 +25,7 @@ def test_windows_xxx(caplog: pytest.LogCaptureFixture):
 def automation() -> Automation:
     return Automation()
 
+
 @pytest.fixture
 def windows(automation) -> Windows:
     return automation.windows()

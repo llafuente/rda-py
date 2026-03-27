@@ -53,7 +53,7 @@ class Mouse:
         assert automation is not None, f"{self.__class__.__name__}(): automation is null"
         self.automation = automation
 
-    def click2(self, x: int|None = None, y: int|None = None) -> "Mouse":
+    def click2(self, x: Union[int, None] = None, y: Union[int, None] = None) -> "Mouse":
         """
         Performs a left click at given screen position.
 

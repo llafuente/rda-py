@@ -18,7 +18,7 @@ class Automation(Base):
     """
 
     #: AutoHotKey library
-    ahk: AHK = AHK()
+    ahk: AHK = None
 
     #: Default timeout, in milliseconds
     TIMEOUT: int = 60000
@@ -113,7 +113,8 @@ class Automation(Base):
         return self.__str__()
 
     def __init__(self, key_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
-                 block_input_interactive=True, block_input_background=False, image_search_sensibility=4):
+                 block_input_interactive=True, block_input_background=False, image_search_sensibility=4,
+                 ahk_executable_path: str = None):
         """
         Constructor to initialize all properties
 
@@ -125,6 +126,7 @@ class Automation(Base):
         :param: blockInputBackground(bool): Blocks user input on background inputMode?
         :param: image_search_sensibility(number): see <Automation.imageSearchSensibility>
         """
+        self.ahk = AHK(executable_path = ahk_executable_path)
         self.set_key_delay(key_delay)
         self.set_send_mode(send_mode)
         self.set_action_delay(action_delay)

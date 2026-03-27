@@ -4,6 +4,7 @@ from .automation import Automation
 from .window import Window
 from .utils import call_repeat_while_return
 from .base import Base
+from typing import Union
 
 class WindowSearch(Base):
     """
@@ -12,13 +13,13 @@ class WindowSearch(Base):
     #: Automation config (back pointer)
     automation: Automation
     #: partial check or regex
-    title: str|re.Pattern|None = None
+    title: Union[str, re.Pattern, None] = None
     #: partial check or regex
-    process: str|re.Pattern|None = None
+    process: Union[str, re.Pattern, None] = None
     #: partial check or regex
-    classNN: str|re.Pattern|None = None
+    classNN: Union[str, re.Pattern, None] = None
     #: partial check or regex
-    path: str|re.Pattern|None = None
+    path: Union[str, re.Pattern, None] = None
 
     def __init__(self, automation: Automation, title = None, process= None, classNN= None, path= None):
         self.automation = automation

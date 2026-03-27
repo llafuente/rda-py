@@ -8,6 +8,7 @@ from src.window import Window
 from src.windows import Windows
 from src.windowsearch import WindowSearch
 from src.automation import Automation
+from src.mouse import Mouse
 import asyncio
 from .timer import Timer
 from .utils import start
@@ -23,7 +24,11 @@ def automation() -> Automation:
 def windows(automation) -> Windows:
     return automation.windows()
 
-def test_match_after_close(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
+@pytest.fixture
+def mouse(automation) -> Mouse:
+    return automation.mouse()
+
+def test_window_match_after_close(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
     win = start(automation, request, "notepad.exe")
     win.activate()
     t.assertEqual(win.is_alive(), not win.is_dead())
@@ -64,3 +69,24 @@ def test_match_after_close(mocker: pytest_mock.MockerFixture, request, automatio
     setattr(win, "_Window__process", None) # python nonsense!!!!
     t.assertIsNone(win.process)
 
+
+def test_window_mouse(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
+    win = start(automation, request, "notepad.exe")
+    win.resize(800, 600)
+
+    for i in range(10):
+
+        win.move(50*i,50*i)
+        win.mouse_move2(100, 100)
+        t.assertEqual(mouse.get(), (50*i+100,50*i+100))
+    win.right_click2(200,200)
+
+
+def test_window_keyboard(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
+    win = start(automation, request, "notepad.exe")
+    win.resize(800, 600)
+    win.move(0,0)
+    win.send_keys("{CTRL down}e{CTRL up}{BACKSPACE}")
+    win.type("Hello world!")
+    win.send_keys("{CTRL down}ec{CTRL up}")
+    t.assertEqual(automation.ahk.get_clipboard(), "Hello world!")
