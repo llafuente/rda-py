@@ -5,7 +5,7 @@ from ahk import AHK
 from .base import Base
 
 # fix circular imports
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 if TYPE_CHECKING:
     from .window import Window
     from .mouse import Mouse
@@ -16,7 +16,7 @@ class Automation(Base):
     """
         Automation configuration and the library entry point.
     """
-
+    ahk_executable_path: Union[str, None] = None
     #: AutoHotKey library
     ahk: AHK = None
 
@@ -82,58 +82,38 @@ class Automation(Base):
     #: See: https://www.autohotkey.com/docs/v1/lib/MouseMove.htm
     mouse_speed: int = 2
 
-    #: Blocks user input on interactive inputMode ?
-    block_input_interactive: bool = True
-
-    #: Blocks user input on background inputMode ?
-    block_input_background: bool = False
-
     #: Default image search sensibility. See "\*n (variation)" at https://www.autohotkey.com/docs/v1/lib/ImageSearch.htm#Parameters
     image_search_sensibility: int = 4
 
-    @property
-    def UIA(self):
-        """
-        Microsoft UI Automation (lazy initialization)
-        """
-        return None
-
-    @property
-    def JAB(self):
-        """
-        Java acess bridge (lazy initialization)
-        """
-        return None
-
-
     def __str__(self):
-        return f'Automation(key_delay = {self.key_delay}, press_duration = {self.press_duration}, input_mode = {self.input_mode}, send_mode = {self.send_mode}, action_delay = {self.action_delay}, mouse_speed = {self.mouse_speed}, block_input_interactive = {self.block_input_interactive}, block_input_background = {self.block_input_background}, image_search_sensibility = {self.image_search_sensibility})'
+        return repr(self)
 
     def __repr__(self):
-        return self.__str__()
+        return f'{self.__class__.__name__}({repr(self.key_delay)}, {repr(self.send_mode)}, {repr(self.action_delay)}, {repr(self.mouse_speed)}, {repr(self.image_search_sensibility)}, {repr(self.ahk_executable_path)})'
 
-    def __init__(self, key_delay=50, send_mode="Event", action_delay=100, mouse_speed=2,
-                 block_input_interactive=True, block_input_background=False, image_search_sensibility=4,
+    def __init__(self,
+                 key_delay=50,
+                 send_mode="Event",
+                 action_delay=100,
+                 mouse_speed=2,
+                 image_search_sensibility=4,
                  ahk_executable_path: str = None):
         """
         Constructor to initialize all properties
 
-        :param: key_delay (int): Delay between key strokes, in milliseconds
-        :param: send_mode(str): Configures how input is going to be sent ("interactive" or "background")
-        :param: action_delay(int): Delay after each action performed by the library
-        :param: mouse_speed(int): Default mouse movement speed
-        :param: blockInputInteractive(bool): Blocks user input on interactive inputMode?
-        :param: blockInputBackground(bool): Blocks user input on background inputMode?
-        :param: image_search_sensibility(number): see <Automation.imageSearchSensibility>
+        :param key_delay: Delay between key strokes, in milliseconds
+        :param send_mode: Configures how input is going to be sent ("interactive" or "background")
+        :param action_delay: Delay after each action performed by the library
+        :param mouse_speed: Default mouse movement speed
+        :param image_search_sensibility(number): see <Automation.imageSearchSensibility>
+        :param ahk_executable_path: custom path AutoHotKey binary
         """
+        self.ahk_executable_path = ahk_executable_path
         self.ahk = AHK(executable_path = ahk_executable_path)
         self.set_key_delay(key_delay)
         self.set_send_mode(send_mode)
         self.set_action_delay(action_delay)
         self.set_mouse_speed(mouse_speed)
-
-        self.block_input_interactive = block_input_interactive
-        self.block_input_background = block_input_background
 
         self.set_image_search_sensibility(image_search_sensibility)
 
