@@ -41,7 +41,7 @@ class WindowSearch(Base):
         Match is case insensitive.
         """
 
-        self._debug(f"({locals()})")
+        self.debug(locals())
 
         if self.title is not None:
             if isinstance(self.title, re.Pattern):

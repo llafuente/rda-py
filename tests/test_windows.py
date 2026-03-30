@@ -30,12 +30,12 @@ def windows(automation) -> Windows:
 def test_windows_get_all_windows(windows):
 
     # Assuming there are at least one window on the system
-    all_windows = windows.get(hidden=True)
+    all_windows = windows.get(include_hidden=True)
     t.assertGreater(len(all_windows), 0)
 
 def test_windows_get_visible_windows(windows):
     # Assuming there are at least one visible window on the system
-    visible_windows = windows.get(hidden=False)
+    visible_windows = windows.get(include_hidden=False)
     t.assertGreater(len(visible_windows), 0)
     # all windows shall have hwnd
     for window in visible_windows:
@@ -58,18 +58,21 @@ def test_windows_not_found(windows):
         windows.find_one({"process": "explorer.exe"})
     t.assertEqual(str(cm.exception), "Multiple windows found")
 
+    wins = windows.find({"process": "explorer.exe"})
+    t.assertGreater(len(wins), 0, "Found multiple explorer windows")
+
 # test regex and hidden process logic
 def test_windows_windows_regex(windows):
     with t.assertRaises(Exception) as cm:
-        windows.find_one({"process": re.compile("^Explorer.*")}, hidden=True)
+        windows.find_one({"process": re.compile("^Explorer.*")}, include_hidden=True)
     t.assertEqual(str(cm.exception), "Multiple windows found")
 
     with t.assertRaises(Exception) as cm:
-        windows.find_one({"title": re.compile("^imposible window title.*")}, hidden=True)
+        windows.find_one({"title": re.compile("^imposible window title.*")}, include_hidden=True)
     t.assertEqual(str(cm.exception), "Window not found")
 
     with t.assertRaises(Exception) as cm:
-        windows.find_one({"title": "imposible window title"}, hidden=True)
+        windows.find_one({"title": "imposible window title"}, include_hidden=True)
     t.assertEqual(str(cm.exception), "Window not found")
 
 def test_windows_get_foreground(windows):

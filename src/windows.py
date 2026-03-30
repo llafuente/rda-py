@@ -1,5 +1,5 @@
 from ahk import AHK
-
+import logging
 from .automation import Automation
 from .window import Window
 from .windowsearch import WindowSearch
@@ -10,25 +10,24 @@ class Windows(Base):
     def __init__(self, automation: Automation):
         self.automation = automation
 
-    def get(self, hidden = False) -> list:
+    def get(self, include_hidden = False) -> list:
         """
-        Retrieves all windows
+        Retrieves all windows (hidden/visible)
 
-        :param hidden (bool): If True, include hidden windows. Defaults to False.
+        :param include_hidden: If True, include hidden windows. Defaults to False.
 
         :example
         >>> import Automation from rda
-        >>> Automation().windows().get(hidden=True)
+        >>> Automation().windows().get(include_hidden=True)
         """
 
-        self._debug(f"({locals()})")
-        wins = self._get(hidden)
-        self._debug(f"<-- found {len(wins)} windows")
+        wins = self._get(include_hidden)
+        self.debug(locals(), f"found {len(wins)} windows")
 
         return wins
 
-    def _get(self, hidden) -> list:
-        windows = self.automation.ahk.list_windows(detect_hidden_windows=hidden)
+    def _get(self, include_hidden) -> list:
+        windows = self.automation.ahk.list_windows(detect_hidden_windows=include_hidden)
 
         r = []
         for win in windows:
@@ -45,19 +44,22 @@ class Windows(Base):
         (the window with which the user is currently working).
 
         If workstation is locked, foreground cannot be determined
+
+        :raise: Could not get foregound window
         """
         win = self.automation.ahk.get_active_window()
+        self.debug(locals(), win.id if win is not None else None)
+
         if win is None:
-            raise Exception("Could not get foregound window")
+            raise RuntimeError("Could not get foregound window")
+
         return Window(self.automation, win.id)
 
-    def _find(self, search_object: WindowSearch, hidden):
+    def _find(self, search_object: WindowSearch, include_hidden):
         """Internal method to find windows matching search criteria."""
         result = []
 
-        self._debug(search_object)
-
-        windows = self._get(hidden)
+        windows = self._get(include_hidden)
 
         for win in windows:
             if search_object.is_match(win):
@@ -65,19 +67,17 @@ class Windows(Base):
 
         return result
 
-    def find_one(self, search_obj: Union[WindowSearch, dict], hidden=False) -> Window:
+    def find_one(self, search_obj: Union[WindowSearch, dict], include_hidden=False) -> Window:
         """
-        Searches for a single window that matches the given properties.
+        Searches for a single window that matches the given search.
 
-        Parameters:
-        - searchObject: Object containing window properties to match
-        - hidden: Boolean indicating whether to search hidden windows
+        :param searchObject: Object containing window properties to match
+        :param include_hidden: Boolean indicating whether to search hidden windows
 
-        Returns:
-        The window object if exactly one match is found
+        :raise: Window not found
+        :raise: Multiple windows found
 
-        Throws:
-        Exception with "Window not found" or "Multiple windows found"
+        :return: The window object if exactly one match is found
         """
 
         # Convert dictionary to RDA_WindowSearch if needed
@@ -85,14 +85,35 @@ class Windows(Base):
             search_obj["automation"] = self.automation
             search_obj = WindowSearch(**search_obj)
 
-        self._debug(f"({locals()})")
 
-        rwins = self._find(search_obj, hidden)
+        rwins = self._find(search_obj, include_hidden)
+        self.debug(locals(), f'Found {len(rwins)} windows')
 
         if not rwins:
-            raise Exception("Window not found")
+            raise RuntimeError("Window not found")
 
         if len(rwins) > 1:
-            raise Exception("Multiple windows found")
+            raise RuntimeError("Multiple windows found")
 
         return rwins[0]
+
+    def find(self, search_obj: Union[WindowSearch, dict], include_hidden=False) -> list[Window]:
+        """
+        Searches for any window that matches the given search.
+
+        :param searchObject: Object containing window properties to match
+        :param include_hidden: Boolean indicating whether to search hidden windows
+
+        :return: The window object if exactly one match is found
+        """
+
+        # Convert dictionary to RDA_WindowSearch if needed
+        if isinstance(search_obj, dict):
+            search_obj["automation"] = self.automation
+            search_obj = WindowSearch(**search_obj)
+
+        self.debug(locals())
+
+        rwins = self._find(search_obj, include_hidden)
+
+        return rwins
