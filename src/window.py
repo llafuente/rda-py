@@ -4,6 +4,7 @@ import time
 
 from .base import Base
 from .automation import Automation
+from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color
 from typing import Union
 
 
@@ -439,3 +440,24 @@ class Window(Base):
         """
         self.automation.keyboard().send_password(password, self.hwnd, self.defaultBackgroundControl)
         return self
+
+
+    #
+    # pixel
+    #
+
+    def get_pixel_color(self, x: int, y: int) -> (int, int, int, int):
+        x2, y2 = self.get_position()
+        # TODO REVIEW locked workstation color in python is 0xFFFFFFFF
+        color = hex_color_to_rgba(self.automation.ahk.pixel_get_color(x + x2, y + y2, coord_mode='Screen', rgb=True))
+        logging.debug(f'get_pixel_color({x}, {y}) <-- {color}')
+        return color
+
+    def search_pixel_color(self, x: int, y: int, witdh:int, height:int, rgb_color: (int, int, int), variation:int = 0) -> (int, int):
+        x2, y2 = self.get_position()
+        search_region_start = (x+x2,y+y2)
+        search_region_end = (x+x2+w,y+y2+h)
+        color_str = rgb_to_hex_color(rgb_color)
+        position = self.automation.ahk.pixel_search(search_region_start, search_region_end, color_str, variation=variation, coord_mode='Screen', rgb=True)
+        logging.debug(f'get_pixel_color({x}, {y}) <-- {position}')
+        return position

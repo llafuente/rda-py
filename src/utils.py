@@ -102,3 +102,21 @@ def repeat_while_exception(timeout_ms: int, delay_ms: int):
         return wrapper
 
     return retry_decorator
+
+def rgba_to_hex_color(r:int, g:int, b:int, a:int) -> str:
+    return f'#{r:02x}{g:02x}{b:02x}{a:02x}'
+
+def rgb_to_hex_color(r:int, g:int, b:int) -> str:
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+def hex_color_to_rgba(hex_color: str) -> (int, int, int, int):
+    # Convert to RGB tuple
+    r = int(hex_color[2:4], 16)
+    g = int(hex_color[4:6], 16)
+    b = int(hex_color[6:8], 16)
+
+    a = 255
+    if (len (hex_color) == 10):
+        a = int(hex_color[8:10], 16)
+
+    return (r, g, b)

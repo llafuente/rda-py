@@ -90,3 +90,23 @@ def test_window_keyboard(mocker: pytest_mock.MockerFixture, request, automation:
     win.type("Hello world!")
     win.send_keys("{CTRL down}ec{CTRL up}")
     t.assertEqual(automation.ahk.get_clipboard(), "Hello world!")
+
+
+def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
+    import os
+    cwd = os.path.dirname(os.path.realpath(__file__))
+
+    win = start(automation, request, "mspaint.exe", f'{cwd}\\images\\640x480-green.bmp')
+    win.resize(800, 600)
+    win.move(0,0)
+
+    win.mouse_move2(400,400)
+    #   rr  gg  bb
+    #0x 22  B1  4C
+    #   34 177  76
+    color = win.get_pixel_color(500, 500)
+    t.assertEqual(color, (0,255,0))
+
+    # out of screen pixel
+    color = win.get_pixel_color(9999, 1)
+    t.assertEqual(color, (255,255,255))
