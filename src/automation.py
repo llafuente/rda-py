@@ -89,9 +89,10 @@ class Automation(Base):
         return repr(self)
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({repr(self.key_delay)}, {repr(self.send_mode)}, {repr(self.action_delay)}, {repr(self.mouse_speed)}, {repr(self.image_search_sensibility)}, {repr(self.ahk_executable_path)})'
+        return f'{self.__class__.__name__}({repr(self.input_mode)}, {repr(self.key_delay)}, {repr(self.send_mode)}, {repr(self.action_delay)}, {repr(self.mouse_speed)}, {repr(self.image_search_sensibility)}, {repr(self.ahk_executable_path)})'
 
     def __init__(self,
+                 input_mode:str = "interactive",
                  key_delay=50,
                  send_mode="Event",
                  action_delay=100,
@@ -102,6 +103,7 @@ class Automation(Base):
         Constructor to initialize all properties
 
         :param key_delay: Delay between key strokes, in milliseconds
+        :param key_delay: Delay between key strokes, in milliseconds
         :param send_mode: Configures how input is going to be sent ("interactive" or "background")
         :param action_delay: Delay after each action performed by the library
         :param mouse_speed: Default mouse movement speed
@@ -110,6 +112,7 @@ class Automation(Base):
         """
         self.ahk_executable_path = ahk_executable_path
         self.ahk = AHK(executable_path = ahk_executable_path)
+        self.set_input_mode(input_mode)
         self.set_key_delay(key_delay)
         self.set_send_mode(send_mode)
         self.set_action_delay(action_delay)

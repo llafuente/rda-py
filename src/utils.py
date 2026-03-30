@@ -104,10 +104,10 @@ def repeat_while_exception(timeout_ms: int, delay_ms: int):
     return retry_decorator
 
 def rgba_to_hex_color(r:int, g:int, b:int, a:int) -> str:
-    return f'#{r:02x}{g:02x}{b:02x}{a:02x}'
+    return f'0x{r:02x}{g:02x}{b:02x}{a:02x}'
 
 def rgb_to_hex_color(r:int, g:int, b:int) -> str:
-    return f'#{r:02x}{g:02x}{b:02x}'
+    return f'0x{r:02x}{g:02x}{b:02x}'
 
 def hex_color_to_rgba(hex_color: str) -> (int, int, int, int):
     # Convert to RGB tuple

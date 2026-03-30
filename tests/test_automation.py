@@ -39,7 +39,7 @@ def test_automation_set_send_mode_exception(automation: Automation):
 
 def test_automation_coverage(automation: Automation, mocker: pytest_mock.MockerFixture):
     # just for coverage purposes...
-    automation.delay(50)
+    automation.sleep(50)
 
     mocker.patch.object(inspect, "currentframe", return_value=None)
     automation._debug("xx")
@@ -47,4 +47,4 @@ def test_automation_coverage(automation: Automation, mocker: pytest_mock.MockerF
 def test_automation_repr(automation: Automation, mocker: pytest_mock.MockerFixture):
     # just for coverage purposes...
     text = repr(automation)
-    t.assertEqual(text, "Automation(50, 'Event', 100, 2, 4, None)")
+    t.assertEqual(text, "Automation('interactive', 50, 'Event', 100, 2, 4, None)")

@@ -31,10 +31,19 @@ def mouse(automation) -> Mouse:
 def test_window_match_after_close(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
     win = start(automation, request, "notepad.exe")
     win.activate()
+    t.assertIsNotNone(win.title)
+    t.assertIsNotNone(win.process)
+    t.assertIsNotNone(win.pid)
+    t.assertIsNotNone(win.path)
+    t.assertIsNotNone(win.classNN)
+    t.assertEqual(win.alive, win.is_alive())
     t.assertEqual(win.is_alive(), not win.is_dead())
     t.assertEqual(win.is_alive(), not win.is_closed())
     t.assertEqual(win.is_foreground(), win.is_activated())
     t.assertEqual(win.is_background(), win.is_deactivated())
+
+    win.set_title("xxx")
+    t.assertEqual(win.title, "xxx")
 
     win.move(0, 0)
     t.assertEqual(win.get_position(), (0,0))
@@ -88,8 +97,20 @@ def test_window_keyboard(mocker: pytest_mock.MockerFixture, request, automation:
     win.move(0,0)
     win.send_keys("{CTRL down}e{CTRL up}{BACKSPACE}")
     win.type("Hello world!")
+    win.type_password("Hello world!")
+    win.send_keys("xxx")
+    win.send_password("yyy")
     win.send_keys("{CTRL down}ec{CTRL up}")
-    t.assertEqual(automation.ahk.get_clipboard(), "Hello world!")
+    t.assertEqual(automation.ahk.get_clipboard(), "Hello world!Hello world!xxxyyy")
+
+    with t.assertRaises(Exception) as cm:
+        win.close(50)
+    t.assertEqual(str(cm.exception), "Could not close window")
+
+    win.close(0, unable_to_close_exception=None)
+    # don't save, win11 mode
+    win.sleep(1000)
+    win.send_keys("n")
 
 
 def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
@@ -110,3 +131,44 @@ def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: A
     # out of screen pixel
     color = win.get_pixel_color(9999, 1)
     t.assertEqual(color, (255,255,255))
+
+    win.click2(500, 500)
+    win.mouse_move2(0, 0)
+    color = win.get_pixel_color(500, 500)
+
+    pos = win.find_pixel_color(495, 495, 10, 10, color)
+    # paints the next pixel
+    t.assertEqual(pos, (501, 499))
+
+    win.move(50, 50)
+    pos = win.find_pixel_color(495, 495, 10, 10, color)
+    # paints the next pixel
+    t.assertEqual(pos, (501, 499))
+
+    #not found
+    with t.assertRaises(Exception) as cm:
+        pos = win.find_pixel_color(495, 495, 10, 10, (255, 255, 255))
+    t.assertEqual(str(cm.exception), "pixel color not found")
+
+    t.assertIsNone(win.find_pixel_color(495, 495, 10, 10, (255, 255, 255), not_found_exception=None))
+
+    win.close(250, unable_to_close_exception=None)
+
+
+    win.get_child({'classNN': 'XAMLModalWindow'}).send_keys("n")
+    win.sleep(250)
+
+
+def test_window_state(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
+    win = start(automation, request, "notepad.exe")
+    win.activate()
+
+    t.assertTrue(win.restored)
+    win.maximize()
+    t.assertTrue(win.maximized)
+    t.assertFalse(win.minimized)
+    win.minimize()
+    t.assertTrue(win.minimized)
+    win.maximize()
+    win.restore()
+    t.assertTrue(win.restored)

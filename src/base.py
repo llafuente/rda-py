@@ -4,14 +4,14 @@ import inspect
 
 _undefined = object()
 class Base:
-    @staticmethod
-    def delay(delay):
+    def sleep(self, delay):
         """
         Method to introduce a delay
 
         :param delay (int): Delay in milliseconds
         """
         time.sleep(delay / 1000)
+        return self
 
     def debug(self, locals_obj: dict, output = _undefined):
 

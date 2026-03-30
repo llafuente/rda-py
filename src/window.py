@@ -5,7 +5,9 @@ import time
 from .base import Base
 from .automation import Automation
 from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color
-from typing import Union
+from typing import TYPE_CHECKING, Union, Tuple
+if TYPE_CHECKING:
+    from .windowsearch import WindowSearch
 
 
 class Window(Base):
@@ -70,10 +72,33 @@ class Window(Base):
         return self.is_alive()
 
 
+    @property
+    def minimized(self) -> bool:
+        """
+        Is window minimized?
+        """
+        return self.automation.ahk.win_get_minmax(title=f"ahk_id {self.hwnd}", detect_hidden_windows=True) == -1
+
+    @property
+    def restored(self) -> bool:
+        """
+        Is window restored ?
+        """
+        return self.automation.ahk.win_get_minmax(title=f"ahk_id {self.hwnd}", detect_hidden_windows=True) == 0
+
+    @property
+    def maximized(self) -> bool:
+        """
+        Is window maximized?
+        """
+        return self.automation.ahk.win_get_minmax(title=f"ahk_id {self.hwnd}", detect_hidden_windows=True) == 1
+
+
+
     #: Control parameter from ControlSend. See <RDA_KeyboardSendKeys>
     #:
     #: Only apply when <RDA_Automation.inputMode> is background
-    defaultBackgroundControl: Union[str, None] = None # TODO if possible! empty string
+    default_background_control: Union[str, None] = None # TODO if possible! empty string
 
     def __init__(self, automation: Automation, hwnd: str):
         #: Automation config (back pointer)
@@ -91,9 +116,9 @@ class Window(Base):
         """
         Waits until title change from the giving one with timeout and error handling
 
-        :param previous_title (str): Previous title to compare against. Empty to trigger on the first change.
-        :param timeout (int): Maximum time in milliseconds to wait (default -1 for no timeout)
-        :param delay (int): Time in milliseconds between checks (default -1 for Automation.DELAY)
+        :param previous_title: Previous title to compare against. Empty to trigger on the first change.
+        :param timeout: Maximum time in milliseconds to wait (default -1 for no timeout)
+        :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
 
         :return: current title
         """
@@ -128,9 +153,9 @@ class Window(Base):
         """
         Waits until title change from the giving one with timeout and error handling
 
-        :param new_title (str): New title to compare against.
-        :param timeout (int): Maximum time in milliseconds to wait (default -1 for no timeout)
-        :param delay (int): Time in milliseconds between checks (default -1 for Automation.DELAY)
+        :param new_title: New title to compare against.
+        :param timeout: Maximum time in milliseconds to wait (default -1 for no timeout)
+        :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
 
         :return: current title
         """
@@ -138,7 +163,7 @@ class Window(Base):
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         delay = delay if delay != -1 else self.automation.DELAY
 
-        self._debug(f"({locals()}")
+        self.debug(locals())
 
         max_ms = time.time_ns() + timeout * 1_000_000
 
@@ -149,23 +174,28 @@ class Window(Base):
                 self._debug(f"Title changed to '{current_title}'")
                 return current_title
 
-            if (time.time_ns() > max_ms):
+            if time.time_ns() > max_ms:
                 raise TimeoutError(f"Timeout after {timeout}ms waiting for title change")
 
             await asyncio.sleep(delay / 1000)  # Convert delay from ms to seconds
 
         raise RuntimeError("Unreachable code reached")
 
-    def close(self, timeout: int = -1, not_close_exception: Union[Exception, None] = Exception("Could not close window")):
+    def close(self, timeout: int = -1, unable_to_close_exception: Union[Exception, None] = Exception("Could not close window")) -> 'Window':
         """
         Closes window and wait until the specified window does not exist.
+
+        :param timeout: Timeout in miliseconds
+        :param unable_to_close_exception: Exception to throw if we are unable to close
+
+        :return: Window for chaining
         """
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         self._debug(f"({locals()})")
 
         self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=timeout/1000, detect_hidden_windows = True)
-        if self.is_alive() and not_close_exception is not None:
-            raise not_close_exception
+        if self.is_alive() and unable_to_close_exception is not None:
+            raise unable_to_close_exception
 
         return self
 
@@ -241,7 +271,7 @@ class Window(Base):
         """
         return self.set_position(x, y)
 
-    def get_position(self) -> (int, int):
+    def get_position(self) -> Tuple[int, int]:
         """
         Get window screen position
         """
@@ -335,7 +365,7 @@ class Window(Base):
         mouse = self.automation.mouse()
         self.activate()
         x2, y2 = self.get_position()
-        mouse.click(x + x2, y + y2)
+        mouse.click2(x + x2, y + y2)
         return self
 
     def right_click2(self, x: int = 9999, y: int = 9999) -> "Window":
@@ -372,7 +402,38 @@ class Window(Base):
         mouse.double_click2(x + x2, y + y2)
         return self
 
+    #
+    # windows
+    #
+    def get_child(self, search_obj, include_hidden = False) -> 'Window':
+        """
+        Searches for a single child window that matches the given search.
 
+        :param searchObject: Object containing window properties to match
+        :param include_hidden: Boolean indicating whether to search hidden windows
+
+        :raise: Window not found
+        :raise: Multiple windows found
+
+        :return: The window
+        """
+        # Convert dictionary to RDA_WindowSearch if needed
+        if isinstance(search_obj, dict):
+            from .windowsearch import WindowSearch
+            search_obj["automation"] = self.automation
+            search_obj = WindowSearch(**search_obj)
+            search_obj.pid = self.pid
+
+        rwins = self.automation.windows()._find(search_obj, include_hidden)
+        self.debug(locals(), f'Found {len(rwins)} windows')
+
+        if not rwins:
+            raise RuntimeError("Window not found")
+
+        if len(rwins) > 1:
+            raise RuntimeError("Multiple windows found")
+
+        return rwins[0]
 
     #
     # keyboard
@@ -392,7 +453,7 @@ class Window(Base):
 
         :return: Window for chaining
         """
-        self.automation.keyboard().type(text, self.hwnd, self.defaultBackgroundControl)
+        self.automation.keyboard().type(text, self.hwnd, self.default_background_control)
         return self
 
 
@@ -410,7 +471,7 @@ class Window(Base):
 
         :return: Window for chaining
         """
-        self.automation.keyboard().type_password(password, self.hwnd, self.defaultBackgroundControl)
+        self.automation.keyboard().type_password(password, self.hwnd, self.default_background_control)
         return self
 
     def send_keys(self, keys: str) -> 'Window':
@@ -424,7 +485,7 @@ class Window(Base):
 
         :return: Window for chaining
         """
-        self.automation.keyboard().send_keys(keys, self.hwnd, self.defaultBackgroundControl)
+        self.automation.keyboard().send_keys(keys, self.hwnd, self.default_background_control)
         return self
 
     def send_password(self, password: str) -> 'Window':
@@ -438,7 +499,7 @@ class Window(Base):
 
         :return: Window for chaining
         """
-        self.automation.keyboard().send_password(password, self.hwnd, self.defaultBackgroundControl)
+        self.automation.keyboard().send_password(password, self.hwnd, self.default_background_control)
         return self
 
 
@@ -446,18 +507,49 @@ class Window(Base):
     # pixel
     #
 
-    def get_pixel_color(self, x: int, y: int) -> (int, int, int, int):
+    def get_pixel_color(self, x: int, y: int) -> Tuple[int, int, int, int]:
+        """
+        Retrieves the color of the pixel at the specified X and Y coordinates.
+
+        :param x: x window coordinate
+        :param y: y window coordinate
+
+        :remarks: (255, 255, 255, 255) Will be returned when workstation is locked.
+        """
         x2, y2 = self.get_position()
         # TODO REVIEW locked workstation color in python is 0xFFFFFFFF
         color = hex_color_to_rgba(self.automation.ahk.pixel_get_color(x + x2, y + y2, coord_mode='Screen', rgb=True))
-        logging.debug(f'get_pixel_color({x}, {y}) <-- {color}')
+        logging.debug(f'Window.get_pixel_color({x}, {y}) <-- {color}')
         return color
 
-    def search_pixel_color(self, x: int, y: int, witdh:int, height:int, rgb_color: (int, int, int), variation:int = 0) -> (int, int):
+    def find_pixel_color(self, x: int, y: int, witdh:int, height:int, rgb_color: Tuple[int, int, int], variation:int = 0, not_found_exception: Union[Exception, None] = Exception("pixel color not found")) -> Union[Tuple[int, int], None]:
+        """
+        Searches a region of the window for a pixel of the specified color.
+
+        :param x: x window coordinate
+        :param y: y window coordinate
+        :param width: region width
+        :param height: region height
+        :param rgb_color: color
+        :param variation: color variation
+        :param not_found_exception: exception raised if not found
+
+        :return: pixel position
+        """
         x2, y2 = self.get_position()
         search_region_start = (x+x2,y+y2)
-        search_region_end = (x+x2+w,y+y2+h)
-        color_str = rgb_to_hex_color(rgb_color)
-        position = self.automation.ahk.pixel_search(search_region_start, search_region_end, color_str, variation=variation, coord_mode='Screen', rgb=True)
-        logging.debug(f'get_pixel_color({x}, {y}) <-- {position}')
+        search_region_end = (x+x2+witdh,y+y2+height)
+        color_str = rgb_to_hex_color(rgb_color[0], rgb_color[1], rgb_color[2])
+
+        position = self.automation.ahk.pixel_search(search_region_start, search_region_end, color=color_str, variation=variation, coord_mode='Screen', rgb=True)
+
+        if position is not None:
+            position = (position[0]-x2, position[1]-y2)
+
+        #logging.debug(f'find_pixel_color({x}, {y}, {witdh}, {height}, {rgb_color}) <-- {position}')
+        logging.debug(f'find_pixel_color({search_region_start}, {search_region_end}, {color_str}) <-- {position}')
+
+        if position is None and not_found_exception is not None:
+            raise not_found_exception
+
         return position

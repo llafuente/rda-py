@@ -20,13 +20,16 @@ class WindowSearch(Base):
     classNN: Union[str, re.Pattern, None] = None
     #: partial check or regex
     path: Union[str, re.Pattern, None] = None
+    #: Process id full match
+    pid: Union[int, None] = None
 
-    def __init__(self, automation: Automation, title = None, process= None, classNN= None, path= None):
+    def __init__(self, automation: Automation, title = None, process= None, classNN= None, path= None, pid = None):
         self.automation = automation
         self.title = title
         self.process = process
         self.classNN = classNN
         self.path = path
+        self.pid = pid
 
     def __str__(self):
         return f'WindowSearch({"" if self.title is None else f"title = {self.title},"}{"" if self.process is None else f"process = {self.process},"}{"" if self.classNN is None else f"classNN = {self.classNN}"}{"" if self.path is None else f"path = {self.path},"})'
@@ -34,14 +37,7 @@ class WindowSearch(Base):
     def __repr__(self):
         return self.__str__()
 
-    def is_match(self, win: Window) -> bool:
-        """
-        Tests if given object match the current window.
-
-        Match is case insensitive.
-        """
-
-        self.debug(locals())
+    def _is_match(self, win: Window) -> bool:
 
         if self.title is not None:
             if isinstance(self.title, re.Pattern):
@@ -50,6 +46,27 @@ class WindowSearch(Base):
             else:
                 try:
                     win.title.lower().index(self.title.lower())
+                except:
+                    return False
+
+        if self.classNN is not None:
+            if isinstance(self.classNN, re.Pattern):
+                if not self.classNN.match(win.classNN):
+                    return False
+            else:
+                try:
+                    win.classNN.lower().index(self.classNN.lower())
+                except:
+                    return False
+
+
+        if self.path is not None:
+            if isinstance(self.path, re.Pattern):
+                if not self.path.match(win.path):
+                    return False
+            else:
+                try:
+                    win.path.lower().index(self.path.lower())
                 except:
                     return False
 
@@ -67,7 +84,22 @@ class WindowSearch(Base):
                 except:
                     return False
 
+        if self.pid is not None:
+            if self.pid != win.pid:
+                return False
+
         return True
+
+
+    def is_match(self, win: Window) -> bool:
+        """
+        Tests if given object match the current window.
+
+        Match is case insensitive.
+        """
+        b = self._is_match(win)
+        self.debug(locals(), b)
+        return b
 
     def wait_until_match(self, win: Window, timeout_ms: int = -1, delay_ms: int = -1, timeout_exception=Exception("wait_until_match timeout")) -> bool:
         """
