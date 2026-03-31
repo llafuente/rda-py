@@ -34,7 +34,7 @@ class Automation(Base):
     #: Use -1 for no delay at all and 0 for the smallest possible delay
     #:
     #: See: https://www.autohotkey.com/docs/commands/SetKeyDelay.htm
-    key_delay: int = 50
+    key_delay: int = 100
 
     #: Certain games and other specialized applications may require a delay inside each keystroke; that is, after the press of the key
     #: but before its release.

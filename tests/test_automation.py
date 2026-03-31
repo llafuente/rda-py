@@ -46,5 +46,5 @@ def test_automation_coverage(automation: Automation, mocker: pytest_mock.MockerF
 
 def test_automation_repr(automation: Automation, mocker: pytest_mock.MockerFixture):
     # just for coverage purposes...
-    text = repr(automation)
-    t.assertEqual(text, "Automation('interactive', 50, 'Event', 100, 2, 4, None)")
+    t.assertEqual(repr(automation), "Automation('interactive', 50, 'Event', 100, 2, 4, None)")
+    t.assertEqual(str(automation), "Automation('interactive', 50, 'Event', 100, 2, 4, None)")

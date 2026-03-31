@@ -1,6 +1,9 @@
 import logging
 from typing import List, Optional
+import platform
+
 from .automation import Automation
+from .base import Base
 
 class VirtualKey:
     """
@@ -52,7 +55,7 @@ class VirtualKey:
 
         return output
 
-class Keyboard():
+class Keyboard(Base):
     """
     Keyboard handling at OS level.
 
@@ -94,7 +97,7 @@ class Keyboard():
 
         :return: Keyboard for chaining
         """
-        logging.debug(f'type {({"text": text, "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
+        logging.debug(f'Keyboard.type {({"text": text, "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
 
         return self._type(text, hwnd, backgroundControl)
 
@@ -118,7 +121,7 @@ class Keyboard():
         :return: Keyboard for chaining
         """
 
-        logging.debug(f'type_password {({"password": len(password), "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
+        logging.debug(f'Keyboard.type_password {({"password": len(password), "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
 
         return self._type(password, hwnd, backgroundControl)
 
@@ -149,7 +152,7 @@ class Keyboard():
 
         :return: Keyboard for chaining
         """
-        logging.debug(f'send_keys {({"keys": keys, "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
+        logging.debug(f'Keyboard.send_keys {({"keys": keys, "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
 
         return self._send_keys(keys, hwnd, backgroundControl)
 
@@ -168,7 +171,7 @@ class Keyboard():
 
         :return: Keyboard for chaining
         """
-        logging.debug(f'send_keys {({"password": len(password), "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
+        logging.debug(f'Keyboard.send_keys {({"password": len(password), "hwnd": hwnd, "backgroundControl": backgroundControl, "automation": repr(self.automation)})}')
 
         self._send_keys(password, hwnd, backgroundControl)
 
@@ -188,11 +191,13 @@ class Keyboard():
         num = ctypes.windll.user32.GetKeyboardLayoutList(hkl_num, hHkls)
 
         # Convert to list of integers
-        list_ = []
+        list = []
         for i in range(num):
-            list_.append(int(hHkls[i]))
+            list.append(int(hHkls[i]))
 
-        return list_
+        logging.debug(f"Keyboard.get_keyboard_layouts() <-- {list}")
+
+        return list
 
     def get_letter_to_virtualkey(self, letter: str, hkl: int) -> VirtualKey:
         """
@@ -207,27 +212,43 @@ class Keyboard():
         """
         import ctypes
 
-        print(f"letterToVirtualKey")
+        logging.debug(f"get_letter_to_virtualkey()")
 
         # Get Unicode character code
         ch = ord(letter)
+        retVK = None
+        if (int(platform.architecture()[0][:2], 10) == 64):
+            # Call VkKeyScanExW
+            retVK = ctypes.windll.User32.VkKeyScanExW(
+                ctypes.c_ushort(ch),
+                ctypes.c_uint(hkl)
+            )
 
-        # Call VkKeyScanExW
-        retVK = ctypes.windll.User32.VkKeyScanExW(
-            ctypes.c_ushort(ch),
-            ctypes.c_uint(hkl)
-        )
+            if retVK == -1:
+                raise Exception("VkKeyScanExW call failed")
+        else:
+            retVK = ctypes.windll.User32.VkKeyScanExA(
+                ctypes.c_char(ch),
+                ctypes.c_uint(hkl)
+            )
 
-        if retVK == -1:
-            raise Exception("VkKeyScanExW call failed")
-
+            if retVK == -1:
+                raise Exception("VkKeyScanExA call failed")
+        print(retVK)
         vk_int = retVK & 0xFF
+        print(vk_int)
         vk_hex = hex(vk_int)[2:].zfill(2).upper()
         vk = f"{{vk{vk_hex}}}"
-
+        """
+        keyboard_state = vk_int >> 8
+        shift = bool(keyboard_state & 0x01)
+        ctrl = bool(keyboard_state & 0x02)
+        alt = bool(keyboard_state & 0x04)
+        """
         shift = bool(retVK & 0x100)
         ctrl = bool(retVK & 0x200)
         alt = bool(retVK & 0x400)
+        #hanankey = bool(retVK & 0x800)
 
         return VirtualKey(vk, shift, ctrl, alt)
 
@@ -242,7 +263,7 @@ class Keyboard():
 
         :return: virtual key list
         """
-        print(f"textToVirtualKeys")
+        logging.debug(f"textToVirtualKeys()")
 
         result = []
         for ch in text:

@@ -11,7 +11,7 @@ from src.automation import Automation
 from src.mouse import Mouse
 import asyncio
 from .timer import Timer
-from .utils import start
+from .utils import start, notepad_selectall
 
 # Create a TestCase instance
 t = unittest.TestCase()
@@ -95,12 +95,14 @@ def test_window_keyboard(mocker: pytest_mock.MockerFixture, request, automation:
     win = start(automation, request, "notepad.exe")
     win.resize(800, 600)
     win.move(0,0)
-    win.send_keys("{CTRL down}e{CTRL up}{BACKSPACE}")
+    notepad_selectall(win)
+    win.send_keys("{BACKSPACE}")
     win.type("Hello world!")
     win.type_password("Hello world!")
     win.send_keys("xxx")
     win.send_password("yyy")
-    win.send_keys("{CTRL down}ec{CTRL up}")
+    notepad_selectall(win)
+    win.send_keys("{CTRL down}c{CTRL up}")
     t.assertEqual(automation.ahk.get_clipboard(), "Hello world!Hello world!xxxyyy")
 
     with t.assertRaises(Exception) as cm:

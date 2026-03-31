@@ -1,47 +1,12 @@
 import json
 from typing import Union, List, Optional
 from .automation import Automation
+from .base import Base
 import ahk
 import ctypes
 import logging
 
-def _get_cursor_name():
-    # Windows-specific way to get current cursor name
-    try:
-        hwnd = ctypes.windll.user32.GetForegroundWindow()
-        if not hwnd:
-            return "Unknown"
-        hcur = ctypes.windll.user32.GetCursor()
-        if not hcur:
-            return "Unknown"
-        # Use GetCursorInfo (requires more code, skipping for simplicity)
-        # Returning a fallback based on default cursor
-        cur_name = {10042: "Arrow", 10095: "IBeam", 10096: "Wait",
-                    10097: "Crosshair", 10098: "AppStarting",
-                    10099: "Help", 10100: "SizeAll", 10101: "SizeNESW",
-                    10102: "SizeNS", 10103: "SizeNWSE", 10104: "SizeWE",
-                    10105: "UpArrow", 10106: "No", 10107: "Hand"}  # typical IDs
-        return cur_name.get(hcur, "Unknown")
-    except Exception:
-        return "Unknown"
-
-# === End Unknown Stubs ===
-
-class ScreenPosition:
-    def __init__(self, x: int, y: int):
-        self.x = x
-        self.y = y
-
-    def equal(self, other) -> bool:
-        if not isinstance(other, ScreenPosition):
-            return False
-        return self.x == other.x and self.y == other.y
-
-    def toString(self) -> str:
-        return f"({self.x}, {self.y})"
-
-
-class Mouse:
+class Mouse(Base):
     """
     Mouse operations at OS level
     """
