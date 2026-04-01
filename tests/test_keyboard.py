@@ -4,10 +4,10 @@ import pytest
 import pytest_mock
 import unittest
 import logging
-from src.window import Window
-from src.windows import Windows
-from src.keyboard import Keyboard
-from src.automation import Automation
+from src.rda.window import Window
+from src.rda.windows import Windows
+from src.rda.keyboard import Keyboard
+from src.rda.automation import Automation
 import asyncio
 from .timer import Timer
 from .utils import start, notepad_selectall

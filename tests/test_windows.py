@@ -4,9 +4,9 @@ import pytest
 import pytest_mock
 import unittest
 import logging
-from src.window import Window
-from src.windows import Windows
-from src.automation import Automation
+from src.rda.window import Window
+from src.rda.windows import Windows
+from src.rda.automation import Automation
 import asyncio
 from .timer import Timer
 from .utils import start

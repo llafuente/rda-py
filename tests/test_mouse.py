@@ -4,11 +4,11 @@ import pytest
 import pytest_mock
 import unittest
 import logging
-from src.window import Window
-from src.windows import Windows
-from src.automation import Automation
-from src.mouse import Mouse
-from src.keyboard import Keyboard
+from src.rda.window import Window
+from src.rda.windows import Windows
+from src.rda.automation import Automation
+from src.rda.mouse import Mouse
+from src.rda.keyboard import Keyboard
 import asyncio
 from .timer import Timer
 from .utils import start, notepad_selectall
@@ -44,7 +44,7 @@ def test_mouse_move(mocker: pytest_mock.MockerFixture, request, automation, wind
     mouse.move_to2(0, 0)
     t.assertEqual(mouse.get(), (0,0))
     mouse.move_to2(500, 500)
-    t.assertEqual(mouse.get(), (500,500))
+    t.assertEqual(mouse.get_position(), (500,500))
 
     mouse.move_rel2(100, 100)
     t.assertEqual(mouse.get(), (600,600))
@@ -79,3 +79,12 @@ def test_mouse_click(mocker: pytest_mock.MockerFixture, request, automation, win
 
     win.close(50, unable_to_close_exception=None)
     win.send_keys("n")
+
+
+def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard, mouse):
+    win = start(automation, request, 'notepad.exe')
+    win.move(0,0)
+    win.resize(1024,768)
+
+    win.mouse_move2(400,400)
+    t.assertEqual(mouse.get_cursor(), "Arrow")

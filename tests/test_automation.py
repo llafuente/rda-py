@@ -3,7 +3,7 @@ import unittest
 import pytest
 import pytest_mock
 
-from src.automation import Automation
+from src.rda.automation import Automation
 
 # Create a TestCase instance
 t = unittest.TestCase()
@@ -32,7 +32,7 @@ def test_automation_set_send_mode_exception(automation: Automation):
     t.assertEqual(str(cm.exception), "Invalid send mode: xxx")
 
 # test set_send_mode exception
-def test_automation_set_send_mode_exception(automation: Automation):
+def test_automation_set_input_mode_exception(automation: Automation):
     with t.assertRaises(ValueError) as cm:
         automation.set_input_mode("xxx")
     t.assertEqual(str(cm.exception), "Invalid input mode: xxx")

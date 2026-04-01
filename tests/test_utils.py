@@ -2,9 +2,9 @@ import time
 import pytest
 import unittest
 import logging
-from src.windows import Windows
-from src.automation import Automation
-from src.utils import repeat_while_exception, repeat_while_return, call_repeat_while_return
+from src.rda.windows import Windows
+from src.rda.automation import Automation
+from src.rda.utils import repeat_while_exception, repeat_while_return, call_repeat_while_return
 
 xxx_count = 0
 @repeat_while_return(False, 1000, 100)
@@ -58,9 +58,9 @@ class TestWindows(unittest.TestCase):
 
     def test_repeat_while_return_class(self):
         counter = fix_counter()
-        
+
         assert call_repeat_while_return(counter.add_one, [], {}, False, 1000, 50) == True
-        
+
         counter.count = 0
         with self.assertRaises(Exception) as cm:
             call_repeat_while_return(counter.add_one, [], {}, False, 50, 100)

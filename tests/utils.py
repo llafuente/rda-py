@@ -1,7 +1,7 @@
 import logging
 import time
-from src.automation import Automation
-from src.window import Window
+from src.rda.automation import Automation
+from src.rda.window import Window
 
 language = "es"
 
