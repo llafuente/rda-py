@@ -1,5 +1,6 @@
 from ahk import AHK
 import logging
+
 from .automation import Automation
 from .window import Window
 from .windowsearch import WindowSearch
@@ -117,3 +118,20 @@ class Windows(Base):
         rwins = self._find(search_obj, include_hidden)
 
         return rwins
+
+    def minimize_all(self) -> "Windows":
+        """
+        Minimizes all windows
+
+        :return: Windows for chaining
+        """
+        max = 100 # guard against infinite loop
+        win = self.get_foreground()
+        while True:
+            win.minimize()
+            win2 = self.get_foreground()
+            if win.hwnd == win2.hwnd or --max <= 0:
+                break
+            win = win2
+        self.automation.action_performed()
+        return self

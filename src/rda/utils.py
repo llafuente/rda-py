@@ -104,12 +104,35 @@ def repeat_while_exception(timeout_ms: int, delay_ms: int):
     return retry_decorator
 
 def rgba_to_hex_color(r:int, g:int, b:int, a:int) -> str:
+    """
+    Converts RGBA values to a hex color string.
+
+    :param r: Red component (0-255)
+    :param g: Green component (0-255)
+    :param b: Blue component (0-255)
+    :param a: Alpha component (0-255)
+    :return: Hex color string (e.g., '0xRRGGBBAA')
+    """
     return f'0x{r:02x}{g:02x}{b:02x}{a:02x}'
 
 def rgb_to_hex_color(r:int, g:int, b:int) -> str:
+    """
+    Converts RGB values to a hex color string.
+
+    :param r: Red component (0-255)
+    :param g: Green component (0-255)
+    :param b: Blue component (0-255)
+    :return: Hex color string (e.g., '0xRRGGBB')
+    """
     return f'0x{r:02x}{g:02x}{b:02x}'
 
 def hex_color_to_rgba(hex_color: str) -> (int, int, int, int):
+    """
+    Converts a hex color string to an RGBA tuple.
+
+    :param hex_color: Hex color string (e.g., '0xRRGGBB' or '0xRRGGBBAA')
+    :return: Tuple of (R, G, B, A)
+    """
     # Convert to RGB tuple
     r = int(hex_color[2:4], 16)
     g = int(hex_color[4:6], 16)

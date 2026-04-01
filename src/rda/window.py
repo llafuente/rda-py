@@ -368,7 +368,7 @@ class Window(Base):
         mouse.click2(x + x2, y + y2)
         return self
 
-    def right_click2(self, x: int = 9999, y: int = 9999) -> "Window":
+    def right_click2(self, x: int, y: int) -> "Window":
         """
         Performs a right click at given window position.
 
@@ -385,7 +385,7 @@ class Window(Base):
         mouse.right_click2(x + x2, y + y2)
         return self
 
-    def double_click2(self, x: int = 9999, y: int = 9999) -> "Window":
+    def double_click2(self, x: int, y: int) -> "Window":
         """
         Performs a left double click at given window position.
 

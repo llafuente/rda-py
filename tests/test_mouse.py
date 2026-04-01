@@ -4,8 +4,8 @@ import pytest
 import pytest_mock
 import unittest
 import logging
-from src.rda.window import Window
 from src.rda.windows import Windows
+from src.rda.window import Window
 from src.rda.automation import Automation
 from src.rda.mouse import Mouse
 from src.rda.keyboard import Keyboard
@@ -82,9 +82,41 @@ def test_mouse_click(mocker: pytest_mock.MockerFixture, request, automation, win
 
 
 def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard, mouse):
+    windows.minimize_all()
+
+    mouse.move_to2(0, 0)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65561)
+
     win = start(automation, request, 'notepad.exe')
     win.move(0,0)
     win.resize(1024,768)
 
     win.mouse_move2(400,400)
-    t.assertEqual(mouse.get_cursor(), "Arrow")
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65541)
+    win.mouse_move2(0,400)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65553)
+    win.mouse_move2(1016,400)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65553)
+    win.mouse_move2(1016, 760)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65549)
+    t.assertEqual(mouse.sleep(1000).get_cursor(), 'unknown')
+
+def test_mouse_cursor_mspaint(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard, mouse):
+    windows.minimize_all()
+
+    mouse.move_to2(0, 0)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65561)
+
+    win = start(automation, request, 'mspaint.exe')
+    win.move(0,0)
+    win.resize(1024,768)
+
+    win.mouse_move2(400,400)
+    t.assertGreater(mouse.sleep(1000).get_cursor_id(), 0)
+    win.mouse_move2(0,400)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65553)
+    win.mouse_move2(1024+28,400)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65553)
+    win.mouse_move2(1024+24, 768-8)
+    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65549)
+    t.assertEqual(mouse.sleep(1000).get_cursor(), 'unknown')

@@ -154,11 +154,24 @@ def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: A
 
     t.assertIsNone(win.find_pixel_color(495, 495, 10, 10, (255, 255, 255), not_found_exception=None))
 
+    # coverage
+    win.double_click2(475, 475)
+    win.mouse_move2(0,0)
+    t.assertEqual(win.get_pixel_color(475, 475), color)
+
     win.close(250, unable_to_close_exception=None)
 
 
     win.get_child({'classNN': 'XAMLModalWindow'}).send_keys("n")
     win.sleep(250)
+
+def test_window_get_child_errors(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
+    win = start(automation, request, "notepad.exe")
+    win.activate()
+
+    with t.assertRaises(Exception) as cm:
+        win.get_child({'classNN': 'NotExist'})
+    t.assertEqual(str(cm.exception), "Window not found")
 
 
 def test_window_state(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):

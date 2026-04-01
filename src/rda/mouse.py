@@ -1,10 +1,31 @@
 import json
 from typing import Union, List, Optional
+from unicodedata import name
 from .automation import Automation
 from .base import Base
 import ahk
 import ctypes
 import logging
+
+def get_cursor_id2() -> int:
+    # GetCursor returns a handle to the current cursor
+    # https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursor
+    return ctypes.windll.user32.GetCursor()
+
+# get cursor id using getcursorinfo
+def get_cursor_id() -> int:
+    class CURSORINFO(ctypes.Structure):
+        _fields_ = [("cbSize", ctypes.c_ulong),
+                    ("flags", ctypes.c_ulong),
+                    ("hCursor", ctypes.c_void_p),
+                    ("ptScreenPos", ctypes.wintypes.POINT)]
+
+    ci = CURSORINFO()
+    ci.cbSize = ctypes.sizeof(CURSORINFO)
+    if ctypes.windll.user32.GetCursorInfo(ctypes.byref(ci)):
+        return ci.hCursor
+    else:
+        return None
 
 class Mouse(Base):
     """
@@ -32,7 +53,7 @@ class Mouse(Base):
         self.automation.action_performed()
         return self
 
-    def right_click2(self, x: int = 9999, y: int = 9999) -> "Mouse":
+    def right_click2(self, x: Union[int, None] = None, y: Union[int, None] = None) -> "Mouse":
         """
         Performs a right click at given screen position.
 
@@ -46,7 +67,7 @@ class Mouse(Base):
         self.automation.action_performed()
         return self
 
-    def double_click2(self, x: int = 9999, y: int = 9999) -> "Mouse":
+    def double_click2(self, x: Union[int, None] = None, y: Union[int, None] = None) -> "Mouse":
         """
         Performs a left double click at given screen position.
 
@@ -60,7 +81,7 @@ class Mouse(Base):
         self.automation.action_performed()
         return self
 
-    def move_rel2(self, x: int, y: int) -> "Mouse":
+    def move_rel2(self, x: Union[int, None] = None, y: Union[int, None] = None) -> "Mouse":
         """
         Moves mouse cursor to a position relative to current position
 
@@ -77,7 +98,7 @@ class Mouse(Base):
         self.automation.action_performed()
         return self
 
-    def move_to2(self, x: int, y: int) -> "Mouse":
+    def move_to2(self, x: Union[int, None] = None, y: Union[int, None] = None) -> "Mouse":
         """
         Moves mouse cursor to a position given screen position
 
@@ -112,6 +133,18 @@ class Mouse(Base):
         """
         return self.get()
 
+    def get_cursor_id(self) -> int:
+        """
+        Retrieves current cursor id
+
+        :remarks: unkown if cannot be determined
+
+        :return: cursor id
+        """
+        cursor_id = get_cursor_id()
+        self.debug(locals(), cursor_id)
+        return cursor_id
+
     def get_cursor(self) -> str:
         """
         Retrieves current cursor name
@@ -120,28 +153,24 @@ class Mouse(Base):
 
         :return: cursor name
         """
-        cursor_name = _get_cursor_name()
-        logging.debug(locals())
+        cursor_id = get_cursor_id()
+        cursors = {
+            32512: 'arrow',
+            32513: 'ibeam',
+            32514: 'wait',
+            32515: 'cross',
+            32516: 'uparrow',
+            32517: 'size_nwse',
+            32518: 'size_nesw',
+            32519: 'size_we',
+            32520: 'size_ns',
+            32521: 'size_all',
+            32522: 'no',
+            32523: 'hand',
+            32642: 'appstarting',
+            32643: 'help',
+            32644: 'working_in_background',
+        }
+        cursor_name = cursors.get(cursor_id, 'unknown')
+        self.debug(locals(), f'cursor_id={cursor_id}, cursor_name={cursor_name}')
         return cursor_name
-
-    def is_cursor(self, list_or_name: Union[str, List[str]]) -> bool:
-        """
-        Checks if current cursor is contained in the given list
-
-        :return: cursor name
-        """
-        # arrayize
-        list = [list_or_name] if isinstance(list_or_name, str) else list_or_name
-        try:
-            logging.debug(f"isCursor <-- {list.index(self.getCursor())}")
-            return True
-        except:
-            return False
-
-    def wait_cursor(self,
-                   list_or_name: Union[str, List[str]],
-                   minimum_time: int = 500,
-                   timeout: int = -1,
-                   delay: int = -1) -> "Mouse":
-        # TODO
-        return self
