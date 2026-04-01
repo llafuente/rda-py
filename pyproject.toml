@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rda"
+version = "0.0.1"
+dependencies = [
+  "ahk",
+  "ahk[binary]"
+]
+authors = [
+  { name="Luis Lafuente Morales", email="luis.lafuente.morales@gmail.com" },
+]
+description = "Robotic desktop automation"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Windows",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/llafuente/rda-py"
+Issues = "https://github.com/llafuente/rda-py/issues"
