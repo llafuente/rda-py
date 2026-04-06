@@ -209,14 +209,13 @@ class Automation(Base):
         from .mouse import Mouse
         return Mouse(self)
 
-    def window_from_hwnd(self, hwnd: str) -> 'Window':
+    def window_from_hwnd(self, hwnd: Union[str, int]) -> 'Window':
         """
         Creates a Window given a window handle
 
-        :param hwnd (str): Window handle identifier
+        :param hwnd: Window handle identifier
 
         :return: Window instance
-        :rtype: Window
         """
         from .window import Window
         return Window(self, hwnd)

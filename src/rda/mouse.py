@@ -7,11 +7,13 @@ import ahk
 import ctypes
 import logging
 
+"""
+Not working
 def get_cursor_id2() -> int:
     # GetCursor returns a handle to the current cursor
     # https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursor
     return ctypes.windll.user32.GetCursor()
-
+"""
 # get cursor id using getcursorinfo
 def get_cursor_id() -> int:
     class CURSORINFO(ctypes.Structure):
@@ -24,7 +26,7 @@ def get_cursor_id() -> int:
     ci.cbSize = ctypes.sizeof(CURSORINFO)
     if ctypes.windll.user32.GetCursorInfo(ctypes.byref(ci)):
         return ci.hCursor
-    else:
+    else: # pragma: no cover
         return None
 
 class Mouse(Base):

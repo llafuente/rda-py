@@ -23,6 +23,7 @@ class Window(Base):
         Window title
         """
         return self.automation.ahk.win_get_title(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
     _pid: Union[int, None] = None
 
     @property
@@ -30,11 +31,13 @@ class Window(Base):
         """
         Process identifier (cached)
         """
-        if (self._pid == None):
+        if self._pid is None:
             self._pid = self.automation.ahk.win_get_pid(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
         return self._pid
 
     __process:Union[str, None] = None
+
     @property
     def process(self) -> Union[str, None]:
         """
@@ -45,6 +48,7 @@ class Window(Base):
         return self.__process
 
     __path: Union[str, None] = None
+
     @property
     def path(self) -> Union[str, None]:
         """
@@ -55,6 +59,7 @@ class Window(Base):
         return self.__path
 
     __classNN: Union[str, None] = None
+
     @property
     def classNN(self) -> str:
         """
@@ -158,7 +163,7 @@ class Window(Base):
 
             await asyncio.sleep(delay / 1000)  # Convert delay from ms to seconds
 
-        raise RuntimeError("Unreachable code reached")
+        raise RuntimeError("unreachable code") # pragma: no cover
 
     async def wait_until_title_change_to(self, new_title: Union[str, None] = None, timeout: int = -1, delay: int = -1) -> str:
         """
@@ -190,7 +195,7 @@ class Window(Base):
 
             await asyncio.sleep(delay / 1000)  # Convert delay from ms to seconds
 
-        raise RuntimeError("Unreachable code reached")
+        raise RuntimeError("unreachable code") # pragma: no cover
 
     def close(self, timeout: int = -1, unable_to_close_exception: Union[Exception, None] = Exception("Could not close window")) -> 'Window':
         """

@@ -7,6 +7,7 @@ import logging
 from src.rda.window import Window
 from src.rda.windows import Windows
 from src.rda.automation import Automation
+from src.rda.windowsearch import WindowSearch
 import asyncio
 from .timer import Timer
 from .utils import start
@@ -49,7 +50,7 @@ def test_windows_get_visible_windows(windows):
         t.assertIsNotNone(window.path)
         t.assertIsNotNone(window.classNN)
 
-def test_windows_not_found(windows):
+def test_windows_not_found(mocker, automation, windows):
     with t.assertRaises(Exception) as cm:
         windows.find_one({"process": "xxx.exe"})
     t.assertEqual(str(cm.exception), "Window not found")
@@ -62,11 +63,34 @@ def test_windows_not_found(windows):
         windows.find_one({"path": "imposible path"})
     t.assertEqual(str(cm.exception), "Window not found")
 
+    with t.assertRaises(Exception) as cm:
+        windows.find_one({"path": re.compile("imposible path")})
+    t.assertEqual(str(cm.exception), "Window not found")
+
+    with t.assertRaises(Exception) as cm:
+        windows.find_one({"classNN": re.compile("imposible class")})
+    t.assertEqual(str(cm.exception), "Window not found")
+
     wins = windows.find({"path": "C:\\"})
     t.assertGreater(len(wins), 0, "Found multiple applications runnning on C:\\")
 
     wins = windows.find({"process": "explorer.exe"})
     t.assertGreater(len(wins), 0, "Found multiple explorer windows")
+
+    win = automation.window_from_hwnd(100)
+    win2 = automation.window_from_hwnd(101)
+
+
+    ahk_win_get_pid = mocker.patch.object(automation.ahk, "win_get_pid", return_value=103)
+    t.assertEqual(win.pid, 103)
+
+    ws = WindowSearch(automation, pid = 103)
+    t.assertEqual(ws.is_match(win), True)
+
+    ws.pid = 104
+    t.assertEqual(ws.is_match(win), False)
+
+    ahk_win_get_pid.reset_mock()
 
 # test regex and hidden process logic
 def test_windows_windows_regex(windows):

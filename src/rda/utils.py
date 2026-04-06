@@ -33,7 +33,7 @@ def loop_until(func: Callable[..., Tuple[bool, T]], timeout_ms: int, delay_ms: i
 
         time.sleep(delay_ms / 1000)
 
-    raise Exception('unreachable code')
+    raise RuntimeError("unreachable code") # pragma: no cover
 
 def rgba_to_hex_color(r:int, g:int, b:int, a:int) -> str:
     """
@@ -73,5 +73,6 @@ def hex_color_to_rgba(hex_color: str) -> (int, int, int, int):
     a = 255
     if (len (hex_color) == 10):
         a = int(hex_color[8:10], 16)
+        return (r, g, b, a)
 
     return (r, g, b)
