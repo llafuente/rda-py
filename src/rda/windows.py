@@ -83,8 +83,7 @@ class Windows(Base):
 
         # Convert dictionary to RDA_WindowSearch if needed
         if isinstance(search_obj, dict):
-            search_obj["automation"] = self.automation
-            search_obj = WindowSearch(**search_obj)
+            search_obj = WindowSearch(self.automation, **search_obj)
 
 
         rwins = self._find(search_obj, include_hidden)
@@ -110,8 +109,7 @@ class Windows(Base):
 
         # Convert dictionary to RDA_WindowSearch if needed
         if isinstance(search_obj, dict):
-            search_obj["automation"] = self.automation
-            search_obj = WindowSearch(**search_obj)
+            search_obj = WindowSearch(self.automation, **search_obj)
 
         self.debug(locals())
 

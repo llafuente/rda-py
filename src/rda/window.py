@@ -4,7 +4,7 @@ import time
 
 from .base import Base
 from .automation import Automation
-from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color, call_repeat_while_return, loop_until
+from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color, loop_until
 from typing import TYPE_CHECKING, Union, Tuple
 if TYPE_CHECKING:
     from .windowsearch import WindowSearch
@@ -308,6 +308,7 @@ class Window(Base):
         """
         self._debug(f"({locals()})")
         self.automation.ahk.win_move(x=x, y=y, width=None, height=None, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        self.automation.action_performed()
 
         return self
 
@@ -329,6 +330,7 @@ class Window(Base):
         """
         self._debug(f"({locals()})")
         self.automation.ahk.win_move(x=None, y=None, width=width, height=height, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        self.automation.action_performed()
 
         return self
 
@@ -459,7 +461,7 @@ class Window(Base):
     #
     # windows
     #
-    def get_child(self, search_obj, include_hidden = False, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
+    def get_child(self, search_obj: Union['WindowSearch', dict], include_hidden = False, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
         """
             Retrieves a "single" child window that matches the specified search criteria.
 
@@ -474,9 +476,11 @@ class Window(Base):
         # Convert dictionary to WindowSearch if needed
         if isinstance(search_obj, dict):
             from .windowsearch import WindowSearch
-            search_obj["automation"] = self.automation
-            search_obj = WindowSearch(**search_obj)
-            search_obj.pid = self.pid
+            search_obj = WindowSearch(self.automation, **search_obj)
+
+        if search_obj.pid is not None:
+            raise ValueError("pid is not allowed in search_obj")
+        search_obj.pid = self.pid
 
         rwins = self.automation.windows()._find(search_obj, include_hidden)
         self.debug(locals(), f'Found {len(rwins)} windows')
@@ -490,7 +494,8 @@ class Window(Base):
             raise RuntimeError("Multiple windows found")
 
         return rwins[0]
-    def wait_child(self, search_obj, include_hidden = False, timeout: int = -1, delay: int = -1, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
+
+    def wait_child(self, search_obj: Union['WindowSearch', dict], include_hidden = False, timeout: int = -1, delay: int = -1, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
         """
         Waits until a child window that matches the specified search criteria is found.
 
@@ -505,15 +510,20 @@ class Window(Base):
         # Convert dictionary to WindowSearch if needed
         if isinstance(search_obj, dict):
             from .windowsearch import WindowSearch
-            search_obj["automation"] = self.automation
-            search_obj = WindowSearch(**search_obj)
-            search_obj.pid = self.pid
+            search_obj = WindowSearch(self.automation, **search_obj)
+
+        if search_obj.pid is not None:
+            raise ValueError("pid is not allowed in search_obj")
+
+        search_obj.pid = self.pid
 
         def check():
-            win = self.get_child(search_obj, include_hidden, not_found_exception=None)
-            if win is None:
+            wins = self.automation.windows()._find(search_obj, include_hidden)
+            if not wins or len(wins) > 1:
                 return True, None
-            return False, win
+
+            self.debug(locals(), f'Found {len(wins)} windows')
+            return False, wins[0]
 
         return loop_until(check,
             timeout if timeout != -1 else self.automation.TIMEOUT,

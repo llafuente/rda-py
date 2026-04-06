@@ -11,7 +11,7 @@ from src.rda.mouse import Mouse
 from src.rda.keyboard import Keyboard
 import asyncio
 from .timer import Timer
-from .utils import start, notepad_selectall
+from .utils import start, notepad_selectall, notepad_close_without_save
 
 # Create a TestCase instance
 t = unittest.TestCase()
@@ -58,27 +58,27 @@ def test_mouse_move(mocker: pytest_mock.MockerFixture, request, automation, wind
 
 
 def test_mouse_click(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard, mouse):
+    automation.set_action_delay(1000)
+
     win = start(automation, request, 'notepad.exe')
     win.move2(0,0)
     win.resize(1024,768)
+
+    automation.ahk.set_clipboard("")
 
     notepad_selectall(win)
     keyboard.send_keys('{BACKSPACE}')
     keyboard.type("hello!")
 
-    mouse.click2(33, 61)
+    #mouse.click2(33, 61)
 
     mouse.right_click2(500, 150)
-    #mouse.move_rel2(230, 25)
-    mouse.move_rel2(320, 25)
-    mouse.sleep(2000)
-    mouse.click2()
+    mouse.move_rel2(230, 25).click2()
 
     keyboard.send_keys("{CTRL down}c{CTRL up}")
     t.assertEqual(automation.ahk.get_clipboard(), "hello!")
 
-    win.close(50, unable_to_close_exception=None)
-    win.send_keys("n")
+    notepad_close_without_save(win)
 
 
 def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard, mouse):
@@ -90,7 +90,7 @@ def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automa
     win = start(automation, request, 'notepad.exe')
     win.move2(0,0)
     win.resize(1024,768)
-    sleep = 3000
+    sleep = 1000
 
     win.mouse_move2(400,400)
     t.assertEqual(mouse.sleep(sleep).get_cursor_id(), 65541)
@@ -98,7 +98,7 @@ def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automa
     t.assertEqual(mouse.sleep(sleep).get_cursor_id(), 65553)
     win.mouse_move2(1018,400)
     t.assertEqual(mouse.sleep(sleep).get_cursor_id(), 65553)
-    win.mouse_move2(1016, 760)
+    win.mouse_move2(1018, 761)
     t.assertEqual(mouse.sleep(sleep).get_cursor_id(), 65549)
     t.assertEqual(mouse.sleep(sleep).get_cursor(), 'unknown')
 
@@ -111,13 +111,14 @@ def test_mouse_cursor_mspaint(mocker: pytest_mock.MockerFixture, request, automa
     win = start(automation, request, 'mspaint.exe')
     win.move2(0,0)
     win.resize(1024,768)
+    t.assertEqual(win.get_size(), (1024,768))
 
     win.mouse_move2(400,400)
     t.assertGreater(mouse.sleep(1000).get_cursor_id(), 0)
     win.mouse_move2(0,400)
     t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65553)
-    win.mouse_move2(1024+28,400)
+    win.mouse_move2(1019,400)
     t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65553)
-    win.mouse_move2(1024+24, 768-8)
+    win.mouse_move2(1019, 761)
     t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65549)
     t.assertEqual(mouse.sleep(1000).get_cursor(), 'unknown')

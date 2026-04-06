@@ -34,3 +34,10 @@ def notepad_save(win: Window):
         win.send_keys("{CTRL down}g{CTRL up}")
     else:
         win.send_keys("{CTRL down}s{CTRL up}")
+
+
+def notepad_close_without_save(win: Window):
+    win.close(0, unable_to_close_exception=None)
+    # don't save, win11 mode
+    win.sleep(1000)
+    win.send_keys("n")

@@ -58,6 +58,13 @@ def test_windows_not_found(windows):
         windows.find_one({"process": "explorer.exe"})
     t.assertEqual(str(cm.exception), "Multiple windows found")
 
+    with t.assertRaises(Exception) as cm:
+        windows.find_one({"path": "imposible path"})
+    t.assertEqual(str(cm.exception), "Window not found")
+
+    wins = windows.find({"path": "C:\\"})
+    t.assertGreater(len(wins), 0, "Found multiple applications runnning on C:\\")
+
     wins = windows.find({"process": "explorer.exe"})
     t.assertGreater(len(wins), 0, "Found multiple explorer windows")
 

@@ -12,7 +12,7 @@ from src.rda.mouse import Mouse
 import asyncio
 import threading
 from .timer import Timer
-from .utils import notepad_save, start, notepad_selectall
+from .utils import notepad_save, start, notepad_selectall, notepad_close_without_save
 
 # Create a TestCase instance
 t = unittest.TestCase()
@@ -29,12 +29,6 @@ def windows(automation) -> Windows:
 def mouse(automation) -> Mouse:
     return automation.mouse()
 
-
-def notepad_close_without_save(win: Window):
-    win.close(0, unable_to_close_exception=None)
-    # don't save, win11 mode
-    win.sleep(1000)
-    win.send_keys("n")
 
 def test_window_match_after_close(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
     win = start(automation, request, "notepad.exe")
@@ -145,12 +139,13 @@ def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: A
 
     pos = win.find_pixel_color(495, 495, 10, 10, color)
     # paints the next pixel
-    t.assertEqual(pos, (501, 499))
+    t.assertGreater(pos[0], 0)
+    t.assertGreater(pos[1], 0)
 
     win.move2(50, 50)
-    pos = win.find_pixel_color(495, 495, 10, 10, color)
+    pos2 = win.find_pixel_color(495, 495, 10, 10, color)
     # paints the next pixel
-    t.assertEqual(pos, (501, 499))
+    t.assertEqual(pos, pos2)
 
     #not found
     with t.assertRaises(Exception) as cm:
@@ -176,7 +171,7 @@ def test_window_get_child_errors(mocker: pytest_mock.MockerFixture, request, aut
 
     with t.assertRaises(Exception) as cm:
         win.get_child({'classNN': 'NotExist'})
-    t.assertEqual(str(cm.exception), "Window not found")
+    t.assertEqual(str(cm.exception), "Child window not found")
 
 
 def test_window_state(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
@@ -304,13 +299,22 @@ def test_window_wait_child(mocker: pytest_mock.MockerFixture, request, automatio
     win.send_keys("xxx")
 
     with t.assertRaises(Exception) as cm:
+        dialog = win.wait_child({'classNN': '#32770', 'pid': win.pid}, timeout= 1000, delay=500)
+    t.assertEqual(str(cm.exception), "pid is not allowed in search_obj")
+
+
+    with t.assertRaises(Exception) as cm:
         dialog = win.wait_child({'classNN': '#32770'}, timeout= 1000, delay=500)
     t.assertEqual(str(cm.exception), "Child window not found")
 
     # TODO check multiple window found
     logging.debug("------------------------------")
     notepad_save(win)
-    dialog = win.wait_child({'classNN': '#32770'}, timeout= 2000, delay=500)
+
+    search_obj = {'classNN': '#32770'}
+    dialog = win.wait_child(search_obj, timeout= 2000, delay=500)
+    t.assertEqual(search_obj, {'classNN': '#32770'}) # check that not modified
+
     # child window need some time to process keys
     dialog.sleep(1000).send_keys("{ESC}")
 

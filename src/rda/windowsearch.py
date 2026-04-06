@@ -2,7 +2,7 @@ import re
 
 from .automation import Automation
 from .window import Window
-from .utils import call_repeat_while_return
+from .utils import loop_until
 from .base import Base
 from typing import Union
 
@@ -32,7 +32,18 @@ class WindowSearch(Base):
         self.pid = pid
 
     def __str__(self):
-        return f'WindowSearch({"" if self.title is None else f"title = {self.title},"}{"" if self.process is None else f"process = {self.process},"}{"" if self.classNN is None else f"classNN = {self.classNN}"}{"" if self.path is None else f"path = {self.path},"})'
+        props = []
+        if self.title is not None:
+            props.append(f"title = {self.title}")
+        if self.process is not None:
+            props.append(f"process = {self.process}")
+        if self.classNN is not None:
+            props.append(f"classNN = {self.classNN}")
+        if self.path is not None:
+            props.append(f"path = {self.path}")
+        if self.pid is not None:
+            props.append(f"pid = {self.pid}")
+        return f'WindowSearch({", ".join(props)})'
 
     def __repr__(self):
         return self.__str__()
@@ -112,4 +123,9 @@ class WindowSearch(Base):
 
 
         self._debug(f"({locals()})")
-        return call_repeat_while_return(self.is_match, [win], {}, False, timeout_ms, delay_ms, timeout_exception)
+
+        def check():
+            b = self.is_match(win)
+            return not b,b
+
+        return loop_until(check, timeout_ms, delay_ms, timeout_exception)
