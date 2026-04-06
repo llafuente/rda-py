@@ -459,7 +459,7 @@ class Window(Base):
     #
     # windows
     #
-    def get_child(self, search_obj, include_hidden = False) -> 'Window':
+    def get_child(self, search_obj, include_hidden = False, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
         """
             Retrieves a "single" child window that matches the specified search criteria.
 
@@ -471,7 +471,7 @@ class Window(Base):
 
         :return: The child window
         """
-        # Convert dictionary to RDA_WindowSearch if needed
+        # Convert dictionary to WindowSearch if needed
         if isinstance(search_obj, dict):
             from .windowsearch import WindowSearch
             search_obj["automation"] = self.automation
@@ -482,13 +482,43 @@ class Window(Base):
         self.debug(locals(), f'Found {len(rwins)} windows')
 
         if not rwins:
-            raise RuntimeError("Window not found")
+            if not_found_exception is not None:
+                raise not_found_exception
+            return None
 
         if len(rwins) > 1:
             raise RuntimeError("Multiple windows found")
 
         return rwins[0]
+    def wait_child(self, search_obj, include_hidden = False, timeout: int = -1, delay: int = -1, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
+        """
+        Waits until a child window that matches the specified search criteria is found.
 
+        :param search_obj: Search criteria, either as a dictionary or a WindowSearch object
+        :param include_hidden: Whether to include hidden windows in the search (default: False)
+        :param timeout: Maximum time in milliseconds to wait (default -1 for Automation.TIMEOUT)
+        :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
+        :param not_found_exception: Exception to raise if the child window is not found within the timeout
+
+        :return: The child window
+        """
+        # Convert dictionary to WindowSearch if needed
+        if isinstance(search_obj, dict):
+            from .windowsearch import WindowSearch
+            search_obj["automation"] = self.automation
+            search_obj = WindowSearch(**search_obj)
+            search_obj.pid = self.pid
+
+        def check():
+            win = self.get_child(search_obj, include_hidden, not_found_exception=None)
+            if win is None:
+                return True, None
+            return False, win
+
+        return loop_until(check,
+            timeout if timeout != -1 else self.automation.TIMEOUT,
+            delay if delay != -1 else self.automation.DELAY,
+            not_found_exception)
     #
     # keyboard
     #

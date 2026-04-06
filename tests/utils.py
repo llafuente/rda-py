@@ -26,3 +26,11 @@ def notepad_selectall(win: Window):
         win.send_keys("{CTRL down}e{CTRL up}")
     else:
         win.send_keys("{CTRL down}a{CTRL up}")
+
+
+def notepad_save(win: Window):
+    win.default_background_control = 'RichEditD2DPT1'
+    if (language == "es"):
+        win.send_keys("{CTRL down}g{CTRL up}")
+    else:
+        win.send_keys("{CTRL down}s{CTRL up}")

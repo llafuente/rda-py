@@ -12,7 +12,7 @@ from src.rda.mouse import Mouse
 import asyncio
 import threading
 from .timer import Timer
-from .utils import start, notepad_selectall
+from .utils import notepad_save, start, notepad_selectall
 
 # Create a TestCase instance
 t = unittest.TestCase()
@@ -28,6 +28,13 @@ def windows(automation) -> Windows:
 @pytest.fixture
 def mouse(automation) -> Mouse:
     return automation.mouse()
+
+
+def notepad_close_without_save(win: Window):
+    win.close(0, unable_to_close_exception=None)
+    # don't save, win11 mode
+    win.sleep(1000)
+    win.send_keys("n")
 
 def test_window_match_after_close(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
     win = start(automation, request, "notepad.exe")
@@ -110,10 +117,7 @@ def test_window_keyboard(mocker: pytest_mock.MockerFixture, request, automation:
         win.close(50)
     t.assertEqual(str(cm.exception), "Could not close window")
 
-    win.close(0, unable_to_close_exception=None)
-    # don't save, win11 mode
-    win.sleep(1000)
-    win.send_keys("n")
+    notepad_close_without_save(win)
 
 
 def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
@@ -291,3 +295,23 @@ def test_window_regions(mocker: pytest_mock.MockerFixture, request, automation: 
     win.set_position(50, 50)
     t.assertEqual(win.get_region(), (50, 50, 800, 600))
     t.assertEqual(win.get_rectangle(), (50, 50, 850, 650))
+
+
+def test_window_wait_child(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
+    win = start(automation, request, "notepad.exe")
+    win.set_position(0, 0)
+    win.set_size(800, 600)
+    win.send_keys("xxx")
+
+    with t.assertRaises(Exception) as cm:
+        dialog = win.wait_child({'classNN': '#32770'}, timeout= 1000, delay=500)
+    t.assertEqual(str(cm.exception), "Child window not found")
+
+    # TODO check multiple window found
+    logging.debug("------------------------------")
+    notepad_save(win)
+    dialog = win.wait_child({'classNN': '#32770'}, timeout= 2000, delay=500)
+    # child window need some time to process keys
+    dialog.sleep(1000).send_keys("{ESC}")
+
+    notepad_close_without_save(win)
