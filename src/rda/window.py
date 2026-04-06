@@ -112,6 +112,17 @@ class Window(Base):
     def __repr__(self):
         return self.__str__()
 
+    def set_opaque(self) -> 'Window':
+        """
+        Set window opaque (remove transparency)
+
+        :return: Window for chaining
+        """
+        self._debug(f"({locals()})")
+        self.automation.ahk.win_set_transparent('Off', title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        return self
+
+
     async def wait_until_title_change_from(self, previous_title: Union[str, None] = None, timeout: int = -1, delay: int = -1) -> str:
         """
         Waits until title change from the giving one with timeout and error handling
@@ -230,6 +241,10 @@ class Window(Base):
 
         *windows knowledge*: It will fail if workstation is locked or Desktop/Session is non-interactive
         """
+        # TODO REVIEW need to add GetAncestor -> check is activated ?
+        # winHwnd := DllCall("User32\GetAncestor", "Ptr", hwnd, "UInt", 2, "Ptr") ;GA_ROOT := 2
+        # hwnd2 := DllCall("User32\GetForegroundWindow")
+
         minimized = self.minimized
         self.automation.ahk.win_activate(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         # window "opening" animation time
@@ -269,7 +284,7 @@ class Window(Base):
 
         return self
 
-    def move(self, x: int, y: int) -> 'Window':
+    def move2(self, x: int, y: int) -> 'Window':
         """
         Alias of set_position
         """
@@ -296,7 +311,7 @@ class Window(Base):
 
         return self
 
-    def get_size(self):
+    def get_size(self) -> Tuple[int, int]:
         """
         Get window screen width and height
         """
@@ -319,22 +334,57 @@ class Window(Base):
 
     def resize(self, width: int, height: int) -> 'Window':
         """
-        Alias of set_resize
+        Alias of set_size
         """
         return self.set_size(width, height)
 
-    def minimize(self):
+    def get_region(self) -> Tuple[int, int, int, int]:
+        """
+        Get window screen position and size as (x, y, width, height)
+
+        :return: (x, y, width, height)
+        """
+        pos = self.automation.ahk.win_get_position(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+
+        self._debug(f"<-- ({pos})")
+        return pos.x, pos.y, pos.width, pos.height
+
+    def get_rectangle(self) -> Tuple[int, int, int, int]:
+        """
+        Alias of get_region but return (left, top, right, bottom)
+        """
+        x, y, width, height = self.get_region()
+        return x, y, x + width, y + height
+
+    def minimize(self) -> 'Window':
+        """
+        Minimizes the window.
+
+        :return: Window for chaining
+        """
         self._debug(f"({locals()})")
         self.automation.ahk.win_minimize(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        return self
 
-    def restore(self):
+    def restore(self) -> 'Window':
+        """
+        Restores the window.
+
+        :return: Window for chaining
+        """
         self._debug(f"({locals()})")
         self.automation.ahk.win_restore(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        return self
 
-    def maximize(self):
+    def maximize(self) -> 'Window':
+        """
+        Maximizes the window.
+
+        :return: Window for chaining
+        """
         self._debug(f"({locals()})")
         self.automation.ahk.win_maximize(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
-
+        return self
 
     #
     # mouse operations
@@ -355,7 +405,7 @@ class Window(Base):
         mouse.move_to2(x + x2, y + y2)
         return self
 
-    def click2(self, x: int, y: int) -> "Window":
+    def click2(self, x: int, y: int) -> 'Window':
         """
         Performs a left click at given window position.
 
@@ -372,7 +422,7 @@ class Window(Base):
         mouse.click2(x + x2, y + y2)
         return self
 
-    def right_click2(self, x: int, y: int) -> "Window":
+    def right_click2(self, x: int, y: int) -> 'Window':
         """
         Performs a right click at given window position.
 
@@ -389,7 +439,7 @@ class Window(Base):
         mouse.right_click2(x + x2, y + y2)
         return self
 
-    def double_click2(self, x: int, y: int) -> "Window":
+    def double_click2(self, x: int, y: int) -> 'Window':
         """
         Performs a left double click at given window position.
 
@@ -411,15 +461,15 @@ class Window(Base):
     #
     def get_child(self, search_obj, include_hidden = False) -> 'Window':
         """
-        Searches for a single child window that matches the given search.
+            Retrieves a "single" child window that matches the specified search criteria.
 
-        :param searchObject: Object containing window properties to match
-        :param include_hidden: Boolean indicating whether to search hidden windows
+        :param search_obj: Search criteria, either as a dictionary or a WindowSearch object
+        :param include_hidden: Whether to include hidden windows in the search (default: False)
 
         :raise: Window not found
         :raise: Multiple windows found
 
-        :return: The window
+        :return: The child window
         """
         # Convert dictionary to RDA_WindowSearch if needed
         if isinstance(search_obj, dict):
@@ -466,7 +516,7 @@ class Window(Base):
         Sends given password (literally) as keystrokes
 
         :remarks:
-          This method can disclosure information, use <Keyboard.send_password>
+          This method do not disclosure information, just log the length of the password
 
         :remarks:
           use Raw mode: https://www.autohotkey.com/docs/v1/lib/Send.htm#Raw
@@ -497,7 +547,7 @@ class Window(Base):
         It's an alias of <Keyboard.sendKeys> but just log the length
 
         :remarks:
-          This method can disclosure information, use <Keyboard.send_password>
+          This method do not disclosure information, just log the length of the password
 
         :param password: password.
 
@@ -528,7 +578,7 @@ class Window(Base):
 
     def find_pixel_color(self, x: int, y: int, witdh:int, height:int, rgb_color: Tuple[int, int, int], variation:int = 0, not_found_exception: Union[Exception, None] = Exception("pixel color not found")) -> Union[Tuple[int, int], None]:
         """
-        Searches a region of the window for a pixel of the specified color.
+        Searches for a pixel of the specified color within a defined rectangular area of the window.
 
         :param x: x window coordinate
         :param y: y window coordinate
@@ -571,7 +621,7 @@ class Window(Base):
 
         :return: True if the image is found on the window, False otherwise.
         """
-        self.activate()
+        self.set_opaque().activate()
 
         upper_bound = self.get_position()
         lower_bound = self.get_size()

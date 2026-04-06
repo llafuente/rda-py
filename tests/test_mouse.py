@@ -59,7 +59,7 @@ def test_mouse_move(mocker: pytest_mock.MockerFixture, request, automation, wind
 
 def test_mouse_click(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard, mouse):
     win = start(automation, request, 'notepad.exe')
-    win.move(0,0)
+    win.move2(0,0)
     win.resize(1024,768)
 
     notepad_selectall(win)
@@ -88,7 +88,7 @@ def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automa
     t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65561)
 
     win = start(automation, request, 'notepad.exe')
-    win.move(0,0)
+    win.move2(0,0)
     win.resize(1024,768)
     sleep = 3000
 
@@ -109,7 +109,7 @@ def test_mouse_cursor_mspaint(mocker: pytest_mock.MockerFixture, request, automa
     t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65561)
 
     win = start(automation, request, 'mspaint.exe')
-    win.move(0,0)
+    win.move2(0,0)
     win.resize(1024,768)
 
     win.mouse_move2(400,400)

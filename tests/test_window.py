@@ -46,10 +46,10 @@ def test_window_match_after_close(mocker: pytest_mock.MockerFixture, request, au
     win.set_title("xxx")
     t.assertEqual(win.title, "xxx")
 
-    win.move(0, 0)
+    win.move2(0, 0)
     t.assertEqual(win.get_position(), (0,0))
 
-    win.move(50, 50)
+    win.move2(50, 50)
     t.assertEqual(win.get_position(), (50,50))
 
     win.resize(1024, 768)
@@ -86,7 +86,7 @@ def test_window_mouse(mocker: pytest_mock.MockerFixture, request, automation: Au
 
     for i in range(10):
 
-        win.move(50*i,50*i)
+        win.move2(50*i,50*i)
         win.mouse_move2(100, 100)
         t.assertEqual(mouse.get(), (50*i+100,50*i+100))
     win.right_click2(200,200)
@@ -95,7 +95,7 @@ def test_window_mouse(mocker: pytest_mock.MockerFixture, request, automation: Au
 def test_window_keyboard(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
     win = start(automation, request, "notepad.exe")
     win.resize(800, 600)
-    win.move(0,0)
+    win.move2(0,0)
     notepad_selectall(win)
     win.send_keys("{BACKSPACE}")
     win.type("Hello world!")
@@ -122,7 +122,7 @@ def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: A
 
     win = start(automation, request, "mspaint.exe", f'{cwd}\\images\\640x480-green.bmp')
     win.resize(800, 600)
-    win.move(0,0)
+    win.move2(0,0)
 
     win.mouse_move2(400,400)
     #   rr  gg  bb
@@ -143,7 +143,7 @@ def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: A
     # paints the next pixel
     t.assertEqual(pos, (501, 499))
 
-    win.move(50, 50)
+    win.move2(50, 50)
     pos = win.find_pixel_color(495, 495, 10, 10, color)
     # paints the next pixel
     t.assertEqual(pos, (501, 499))
@@ -205,7 +205,7 @@ def test_window_image_search(mocker: pytest_mock.MockerFixture, request, automat
     automation.set_action_delay(1000) # increase delay to be sure that "title" dissapear
     win = start(automation, request, "mspaint.exe", f'{cwd}\\images\\640x480-green.bmp')
     win.resize(1024, 768)
-    win.move(0,0)
+    win.move2(0,0)
     win.mouse_move2(0, 0)
     win.send_keys("{CTRL down}0{CTRL up}")
 
@@ -281,3 +281,13 @@ def test_window_image_search(mocker: pytest_mock.MockerFixture, request, automat
 
 
 
+def test_window_regions(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
+    win = start(automation, request, "notepad.exe")
+    win.set_position(0, 0)
+    win.set_size(800, 600)
+    t.assertEqual(win.get_region(), (0, 0, 800, 600))
+    t.assertEqual(win.get_rectangle(), (0, 0, 800, 600))
+
+    win.set_position(50, 50)
+    t.assertEqual(win.get_region(), (50, 50, 800, 600))
+    t.assertEqual(win.get_rectangle(), (50, 50, 850, 650))
