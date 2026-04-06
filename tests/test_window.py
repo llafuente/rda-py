@@ -10,6 +10,7 @@ from src.rda.windowsearch import WindowSearch
 from src.rda.automation import Automation
 from src.rda.mouse import Mouse
 import asyncio
+import threading
 from .timer import Timer
 from .utils import start, notepad_selectall
 
@@ -187,3 +188,96 @@ def test_window_state(mocker: pytest_mock.MockerFixture, request, automation: Au
     win.maximize()
     win.restore()
     t.assertTrue(win.restored)
+
+
+async def mouse_move_in(win: Window, sleep_ms: int, x:int, y: int) -> None:
+    logging.debug(f"mouse_move_in {win}")
+    await asyncio.sleep(5)
+    win.mouse_move2(x, y)
+    logging.debug(f"mouse_move_in {win}")
+
+
+def test_window_image_search(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows, mouse: Mouse):
+    import os
+    cwd = os.path.dirname(os.path.realpath(__file__))
+
+    MSPAINT_SAVE_POSITION = (206, 37)
+    automation.set_action_delay(1000) # increase delay to be sure that "title" dissapear
+    win = start(automation, request, "mspaint.exe", f'{cwd}\\images\\640x480-green.bmp')
+    win.resize(1024, 768)
+    win.move(0,0)
+    win.mouse_move2(0, 0)
+    win.send_keys("{CTRL down}0{CTRL up}")
+
+    # window on screen ok
+    t.assertEqual(win.has_image(f'{cwd}\\images\\mspaint-save.png', variation=4), True)
+
+    # window minimized ok -> activate
+    win.minimize()
+    t.assertEqual(win.get_image(f'{cwd}\\images\\mspaint-save.png', variation=4), MSPAINT_SAVE_POSITION)
+
+    # move mouse to occlude the icon
+    win.mouse_move2(MSPAINT_SAVE_POSITION[0], MSPAINT_SAVE_POSITION[1])
+    with t.assertRaises(Exception) as cm:
+        win.get_image(f'{cwd}\\images\\mspaint-save.png', variation=4)
+    t.assertEqual(str(cm.exception), "Image not found")
+
+
+    # wait an image that starts not found -> move mouse and then it's found
+    # check that at least pass 2500 ms
+
+    def _move_mouse_after_2500ms():
+        time.sleep(2.5)
+        win.mouse_move2(0, 0)
+
+    worker = threading.Thread(target=_move_mouse_after_2500ms, daemon=True)
+    worker.start()
+
+    started = time.perf_counter()
+    t.assertEqual(win.wait_image_appear(f'{cwd}\\images\\mspaint-save.png', variation=4), MSPAINT_SAVE_POSITION)
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    t.assertGreaterEqual(elapsed_ms, 2500)
+
+    worker.join(timeout=1)
+
+
+    # wait an image that starts not found -> move mouse and then it's found
+    # check that at least pass 2500 ms
+
+    def _move_mouse_after_2500ms():
+        time.sleep(2.5)
+        win.mouse_move2(MSPAINT_SAVE_POSITION[0], MSPAINT_SAVE_POSITION[1])
+
+    worker = threading.Thread(target=_move_mouse_after_2500ms, daemon=True)
+    worker.start()
+
+    started = time.perf_counter()
+    t.assertEqual(win.wait_image_disappear(f'{cwd}\\images\\mspaint-save.png', variation=4), True)
+    elapsed_ms = (time.perf_counter() - started) * 1000
+    t.assertGreaterEqual(elapsed_ms, 2500)
+
+    worker.join(timeout=1)
+
+    # bot example
+    if win.wait_image_disappear(f'{cwd}\\images\\mspaint-save.png', variation=4, not_dissapear_exception=None):
+        # image dissapear
+        t.assertTrue(True)
+    else:
+        # image still present
+        t.assertTrue(False)
+
+
+    # exceptions paths
+    with t.assertRaises(Exception) as cm:
+        win.wait_image_appear(f'{cwd}\\images\\640x480-red.bmp', variation=4, timeout=automation.DELAY)
+    t.assertEqual(str(cm.exception), "Image not found")
+    win.mouse_move2(0, 0)
+    with t.assertRaises(Exception) as cm:
+        win.wait_image_disappear(f'{cwd}\\images\\mspaint-save.png', variation=4, timeout=automation.DELAY)
+    t.assertEqual(str(cm.exception), "Image still present")
+
+    # no expections paths
+    t.assertEqual(win.wait_image_disappear(f'{cwd}\\images\\mspaint-save.png', variation=4, timeout=automation.DELAY, not_dissapear_exception=None), False)
+
+
+

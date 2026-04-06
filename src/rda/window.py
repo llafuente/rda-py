@@ -4,7 +4,7 @@ import time
 
 from .base import Base
 from .automation import Automation
-from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color
+from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color, call_repeat_while_return, loop_until
 from typing import TYPE_CHECKING, Union, Tuple
 if TYPE_CHECKING:
     from .windowsearch import WindowSearch
@@ -117,7 +117,7 @@ class Window(Base):
         Waits until title change from the giving one with timeout and error handling
 
         :param previous_title: Previous title to compare against. Empty to trigger on the first change.
-        :param timeout: Maximum time in milliseconds to wait (default -1 for no timeout)
+        :param timeout: Maximum time in milliseconds to wait (default -1 for Automation.TIMEOUT)
         :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
 
         :return: current title
@@ -126,7 +126,7 @@ class Window(Base):
         if not previous_title:
             previous_title = self.title
 
-        # Use instance's automation settings if available
+        # Override defaults?
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         delay = delay if delay != -1 else self.automation.DELAY
 
@@ -230,7 +230,11 @@ class Window(Base):
 
         *windows knowledge*: It will fail if workstation is locked or Desktop/Session is non-interactive
         """
+        minimized = self.minimized
         self.automation.ahk.win_activate(title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        # window "opening" animation time
+        if minimized:
+            self.sleep(self.automation.WINDOW_OPEN_ANIMATION)
 
         return self
 
@@ -553,3 +557,102 @@ class Window(Base):
             raise not_found_exception
 
         return position
+
+    #
+    # images
+    #
+
+    def get_image(self, image_path: str, variation: int = 0, not_found_exception: Union[Exception, None] = Exception("Image not found")) -> Tuple[int, int]:
+        """
+        Checks if the specified image is currently visible on the window.
+
+        :param image_path: The file path of the image to search for.
+        :param variation: The allowed color variation (0-255) when matching the image.
+
+        :return: True if the image is found on the window, False otherwise.
+        """
+        self.activate()
+
+        upper_bound = self.get_position()
+        lower_bound = self.get_size()
+        lower_bound = (lower_bound[0] + upper_bound[0], lower_bound[1] + upper_bound[1])
+
+        self.debug(locals())
+
+        # (image_path: str, upper_bound: Tuple[int | str, int | str] = (0, 0), lower_bound: Tuple[int | str, int | str] | None = None, *, color_variation: int | None = None, coord_mode: CoordModeRelativeTo | None = None, scale_height: int | None = None, scale_width: int | None = None, transparent: str | None = None, icon: int | None = None) -> (Coordinates | None)
+        pos = self.automation.ahk.image_search(image_path, upper_bound, lower_bound, color_variation = variation, coord_mode = 'Screen')
+
+        if pos == None and not_found_exception is not None:
+            raise not_found_exception
+
+        return pos
+
+    def has_image(self, image_path: str, variation: int = 0) -> bool:
+        """
+        Checks if the specified image is currently visible on the window.
+
+        :param image_path: The file path of the image to search for.
+        :param variation: The allowed color variation (0-255) when matching the image.
+
+        :return: True if the image is found on the window, False otherwise.
+        """
+
+        pos = self.get_image(image_path, variation, not_found_exception = None)
+        return pos != None
+
+    def wait_image_appear(self, image_path: str, variation: int = 0, not_found_exception: Union[Exception, None] = Exception("Image not found"), timeout: int = -1, delay: int = -1) -> Tuple[int, int]:
+        """
+        Waits until the specified image appears on the window.
+
+        :param image_path: The file path of the image to search for.
+        :param variation: The allowed color variation (0-255) when matching the image.
+        :param not_found_exception: Exception to raise if the image is not found within the timeout
+        :param timeout: Maximum time in milliseconds to wait (default -1 for Automation.TIMEOUT)
+        :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
+
+        :return: The coordinates of the found image on the window.
+        """
+
+        # Override defaults?
+        timeout = timeout if timeout != -1 else self.automation.TIMEOUT
+        delay = delay if delay != -1 else self.automation.DELAY
+
+        def check():
+            pos = self.get_image(image_path, variation, None)
+            if pos is None:
+                return True, None
+            return False, pos
+
+        return loop_until(check,
+            timeout,
+            delay,
+            not_found_exception)
+
+    def wait_image_disappear(self, image_path: str, variation: int = 0, not_dissapear_exception: Union[Exception, None] = Exception("Image still present"), timeout: int = -1, delay: int = -1) -> bool:
+        """
+        Waits until the specified image disappears from the window.
+
+        :param image_path: The file path of the image to search for.
+        :param variation: The allowed color variation (0-255) when matching the image.
+        :param not_dissapear_exception: Exception to raise if the image is still present within the timeout
+        :param timeout: Maximum time in milliseconds to wait (default -1 for Automation.TIMEOUT)
+        :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
+
+        :return: True if the image disappeared, False otherwise.
+        """
+
+        # Override defaults?
+        timeout = timeout if timeout != -1 else self.automation.TIMEOUT
+        delay = delay if delay != -1 else self.automation.DELAY
+
+        def check():
+            pos = self.get_image(image_path, variation, None)
+            if pos is None:
+                return False, True
+            return True, False
+
+        return loop_until(check,
+            timeout,
+            delay,
+            not_dissapear_exception)
+

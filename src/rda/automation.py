@@ -29,6 +29,9 @@ class Automation(Base):
     #: Default highlight time, in milliseconds
     HIGHLIGHT_TIME: int = 1000
 
+    #: Default wait time for opening window animation
+    WINDOW_OPEN_ANIMATION: int = 500
+
     #: Delay between key strokes, in milliseconds.
     #:
     #: Use -1 for no delay at all and 0 for the smallest possible delay

@@ -1,7 +1,42 @@
 from functools import wraps
 import time
 
-def call_repeat_while_return(func, args, kwargs, ret_value, timeout_ms: int, delay_ms: int, timeout_exception: Exception = TimeoutError("timeout")):
+from typing import Any, Callable, TypeVar, Tuple
+
+T = TypeVar("T")
+
+
+def loop_until(func: Callable[..., Tuple[bool, T]], timeout_ms: int, delay_ms: int, timeout_exception: Tuple[Exception, None] = TimeoutError("timeout")) -> T:
+    """
+    undertanding timing:
+    timeout = 150, delay = 100, your_func_time = 0 -> 3 attempts
+    0, 100, 200 (timeout)
+
+    timeout = 150, delay = 100, your_func_time = 100 -> 2 attempts
+    0, 200 (timeout)
+
+    timeout = 150, delay = 100, your_func_time = 200 -> 1 attempts
+    0 (timeout)
+    """
+    max_ms = time.time_ns() + timeout_ms * 1_000_000
+
+    while True:
+        cont, v = func()
+
+        if not cont:
+            return v
+
+        if (time.time_ns() > max_ms):
+            if timeout_exception is None:
+                return v
+            raise timeout_exception
+
+        time.sleep(delay_ms / 1000)
+
+    raise Exception('unreachable code')
+
+
+def call_repeat_while_return(func: Callable[..., T], args: tuple[Any, ...], kwargs: dict[str, Any], ret_value: T, timeout_ms: int, delay_ms: int, timeout_exception: Exception = TimeoutError("timeout")) -> T:
     """
     calls given function until it returns something different from ret_value or timeout is reached.
 
