@@ -1,12 +1,12 @@
 from functools import wraps
 import time
 
-from typing import Any, Callable, TypeVar, Tuple
+from typing import Any, Callable, TypeVar, Tuple, Union
 
 T = TypeVar("T")
 
 
-def loop_until(func: Callable[..., Tuple[bool, T]], timeout_ms: int, delay_ms: int, timeout_exception: Tuple[Exception, None] = TimeoutError("timeout")) -> T:
+def loop_until(func: Callable[..., Tuple[bool, T]], timeout_ms: int, delay_ms: int, timeout_exception: Union[Exception, None] = TimeoutError("timeout")) -> T:
     """
     undertanding timing:
     timeout = 150, delay = 100, your_func_time = 0 -> 3 attempts
@@ -58,7 +58,9 @@ def rgb_to_hex_color(r:int, g:int, b:int) -> str:
     """
     return f'0x{r:02x}{g:02x}{b:02x}'
 
-def hex_color_to_rgba(hex_color: str) -> (int, int, int, int):
+Color = Union[Tuple[int, int, int, int], Tuple[int, int, int]]
+
+def hex_color_to_rgba(hex_color: str) -> Color:
     """
     Converts a hex color string to an RGBA tuple.
 

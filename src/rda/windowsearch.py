@@ -77,7 +77,7 @@ class WindowSearch(Base):
                     return False
             else:
                 try:
-                    win.path.lower().index(self.path.lower())
+                    (win.path or '').lower().index(self.path.lower())
                 except:
                     return False
 
@@ -91,7 +91,7 @@ class WindowSearch(Base):
                     return False
             else:
                 try:
-                    win.process.lower().index(self.process.lower())
+                    (win.process or '').lower().index(self.process.lower())
                 except:
                     return False
 

@@ -1,6 +1,6 @@
 import logging
 import time
-from ahk import AHK
+from ahk import AHK, SendMode
 
 from .base import Base
 
@@ -16,9 +16,9 @@ class Automation(Base):
     """
         Automation configuration and the library entry point.
     """
-    ahk_executable_path: Union[str, None] = None
+    ahk_executable_path: str = ''
     #: AutoHotKey library
-    ahk: AHK = None
+    ahk: AHK
 
     #: Default timeout, in milliseconds
     TIMEOUT: int = 60000
@@ -71,7 +71,7 @@ class Automation(Base):
     #: * Play
     #:
     #: See: https://www.autohotkey.com/docs/commands/SendMode.htm
-    send_mode: str = "Event"
+    send_mode: SendMode = "Event"
 
     #: Delay after each action performed by the library.
     #:
@@ -101,7 +101,7 @@ class Automation(Base):
                  action_delay=100,
                  mouse_speed=2,
                  image_search_sensibility=4,
-                 ahk_executable_path: str = None):
+                 ahk_executable_path: str = ''):
         """
         Constructor to initialize all properties
 
@@ -163,12 +163,12 @@ class Automation(Base):
         """
         self.key_delay = key_delay
 
-    def set_send_mode(self, send_mode):
+    def set_send_mode(self, send_mode: SendMode):
         """
         Makes Send synonymous with SendInput or SendPlay rather than the default (SendEvent).
         Also makes Click and MouseMove/Click/Drag use the specified method.
 
-        :param send_mode (str): See <Automation.sendMode>
+        :param send_mode: See <Automation.sendMode>
         """
         try:
             ["Event", "Input", "InputThenPlay", "Play"].index(send_mode)

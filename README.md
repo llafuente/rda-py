@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ### static typing test (mypy)
 
 ```bash
-mypy .\src\automation.py > mypy2
+mypy .\src\rda\automation.py > mypy2
 # diff mypy mypy2
 ```
 

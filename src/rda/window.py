@@ -4,8 +4,8 @@ import time
 
 from .base import Base
 from .automation import Automation
-from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color, loop_until
-from typing import TYPE_CHECKING, Union, Tuple
+from .utils import hex_color_to_rgba, rgba_to_hex_color, rgb_to_hex_color, loop_until, Color
+from typing import TYPE_CHECKING, Optional, Union, Tuple
 if TYPE_CHECKING:
     from .windowsearch import WindowSearch
 
@@ -16,6 +16,8 @@ class Window(Base):
     """
     #: back ref to automation
     automation: Automation
+    #: window handle identifier
+    hwnd: int
 
     @property
     def title(self) -> str:
@@ -70,7 +72,7 @@ class Window(Base):
         return self.__classNN
 
     @property
-    def alive(self) -> str:
+    def alive(self) -> bool:
         """
         Alias of is_alive
         """
@@ -102,14 +104,14 @@ class Window(Base):
 
     #: Control parameter from ControlSend. See <RDA_KeyboardSendKeys>
     #:
-    #: Only apply when <RDA_Automation.inputMode> is background
-    default_background_control: Union[str, None] = None # TODO if possible! empty string
+    #: Only apply when <Automation.inputMode> is background
+    default_background_control: str = ''
 
-    def __init__(self, automation: Automation, hwnd: str):
+    def __init__(self, automation: Automation, hwnd: Union[str, int]):
         #: Automation config (back pointer)
         self.automation = automation
         #: window handle identifier
-        self.hwnd = hwnd
+        self.hwnd = int(hwnd)
 
     def __str__(self):
         return f'Window(hwnd = {self.hwnd})'
@@ -209,7 +211,7 @@ class Window(Base):
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         self._debug(f"({locals()})")
 
-        self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=timeout/1000, detect_hidden_windows = True)
+        self.automation.ahk.win_close(title=f"ahk_id {self.hwnd}", seconds_to_wait=int(timeout/1000), detect_hidden_windows = True)
         if self.is_alive() and unable_to_close_exception is not None:
             raise unable_to_close_exception
 
@@ -334,7 +336,8 @@ class Window(Base):
         :param height: height
         """
         self._debug(f"({locals()})")
-        self.automation.ahk.win_move(x=None, y=None, width=width, height=height, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
+        pos = self.get_position()
+        self.automation.ahk.win_move(x=pos[0], y=pos[1], width=width, height=height, title=f"ahk_id {self.hwnd}", detect_hidden_windows = True)
         self.automation.action_performed()
 
         return self
@@ -466,7 +469,7 @@ class Window(Base):
     #
     # windows
     #
-    def get_child(self, search_obj: Union['WindowSearch', dict], include_hidden = False, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> 'Window':
+    def get_child(self, search_obj: Union['WindowSearch', dict], include_hidden = False, not_found_exception: Union[Exception, None] = Exception("Child window not found")) -> Union['Window', None]:
         """
             Retrieves a "single" child window that matches the specified search criteria.
 
@@ -606,7 +609,7 @@ class Window(Base):
     # pixel
     #
 
-    def get_pixel_color(self, x: int, y: int) -> Tuple[int, int, int, int]:
+    def get_pixel_color(self, x: int, y: int) -> Color:
         """
         Retrieves the color of the pixel at the specified X and Y coordinates.
 
@@ -640,15 +643,14 @@ class Window(Base):
         search_region_end = (x+x2+witdh,y+y2+height)
         color_str = rgb_to_hex_color(rgb_color[0], rgb_color[1], rgb_color[2])
 
-        position = self.automation.ahk.pixel_search(search_region_start, search_region_end, color=color_str, variation=variation, coord_mode='Screen', rgb=True)
+        pos = self.automation.ahk.pixel_search(search_region_start, search_region_end, color=color_str, variation=variation, coord_mode='Screen', rgb=True)
 
-        if position is not None:
-            position = (position[0]-x2, position[1]-y2)
+        position = (pos[0]-x2, pos[1]-y2) if pos is not None else None
 
         #logging.debug(f'find_pixel_color({x}, {y}, {witdh}, {height}, {rgb_color}) <-- {position}')
         logging.debug(f'find_pixel_color({search_region_start}, {search_region_end}, {color_str}) <-- {position}')
 
-        if position is None and not_found_exception is not None:
+        if pos is None and not_found_exception is not None:
             raise not_found_exception
 
         return position
@@ -657,14 +659,14 @@ class Window(Base):
     # images
     #
 
-    def get_image(self, image_path: str, variation: int = 0, not_found_exception: Union[Exception, None] = Exception("Image not found")) -> Tuple[int, int]:
+    def get_image(self, image_path: str, variation: int = 0, not_found_exception: Union[Exception, None] = Exception("Image not found")) -> Optional[Tuple[int, int]]:
         """
         Checks if the specified image is currently visible on the window.
 
         :param image_path: The file path of the image to search for.
         :param variation: The allowed color variation (0-255) when matching the image.
 
-        :return: True if the image is found on the window, False otherwise.
+        :return: The coordinates of the found image on the window. Raise or None otherwise.
         """
         self.set_opaque().activate()
 
@@ -680,7 +682,7 @@ class Window(Base):
         if pos == None and not_found_exception is not None:
             raise not_found_exception
 
-        return pos
+        return (pos[0], pos[1]) if pos is not None else None
 
     def has_image(self, image_path: str, variation: int = 0) -> bool:
         """

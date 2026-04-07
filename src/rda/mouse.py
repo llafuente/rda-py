@@ -27,7 +27,7 @@ def get_cursor_id() -> int:
     if ctypes.windll.user32.GetCursorInfo(ctypes.byref(ci)):
         return ci.hCursor
     else: # pragma: no cover
-        return None
+        raise Exception("GetCursorInfo failed")
 
 class Mouse(Base):
     """
@@ -35,7 +35,7 @@ class Mouse(Base):
     """
 
     #: back ref to automation
-    automation = None
+    automation: Automation
 
     def __init__(self, automation: Automation):
         assert automation is not None, f"{self.__class__.__name__}(): automation is null"
@@ -117,7 +117,7 @@ class Mouse(Base):
         self.automation.action_performed()
         return self
 
-    def get(self) -> (int, int):
+    def get(self) -> tuple[int, int]:
         """
         Retrieves the current mouse position
 
@@ -127,7 +127,7 @@ class Mouse(Base):
         logging.debug(locals())
         return p
 
-    def get_position(self) -> (int, int):
+    def get_position(self) -> tuple[int, int]:
         """
         Retrieves the current mouse position
 
