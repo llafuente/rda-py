@@ -6,7 +6,7 @@ import unittest
 import logging
 from src.rda.window import Window
 from src.rda.windows import Windows
-from src.rda.keyboard import Keyboard
+from src.rda.keyboard import Keyboard, VirtualKey
 from src.rda.automation import Automation
 import asyncio
 from .timer import Timer
@@ -117,7 +117,24 @@ def test_keyboard_sendkeys(mocker: pytest_mock.MockerFixture, request, automatio
     win.close(50, unable_to_close_exception=None)
     win.send_keys("n")
 
+def test_virtualKey(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard):
+    vkey = VirtualKey('{0x41}', True, True, True)
+    t.assertEqual(str(vkey), '{LShift Down}{LControl Down}{LAlt Down}{0x41}{LShift Up}{LControl Up}{LAlt Up}')
+
+def test_get_text_to_sendkeys(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard):
+    #mock get_text_to_virtualkeys
+    mocker.patch.object(keyboard, 'get_text_to_virtualkeys', return_value=[VirtualKey('{0x41}', True, True, True)])
+    vkeys = keyboard.get_text_to_sendkeys('mock', 67699721)
+    t.assertEqual(str(vkeys), '{LShift Down}{LControl Down}{LAlt Down}{0x41}{LShift Up}{LControl Up}{LAlt Up}')
+
+
+def test_get_text_to_sendkeys2(mocker: pytest_mock.MockerFixture, request, automation, windows, keyboard):
+    #mock get_text_to_virtualkeys
+    mocker.patch.object(keyboard, 'get_text_to_virtualkeys', return_value=[VirtualKey('{0x41}', True, True, True), VirtualKey('{0x41}', False, False, False), VirtualKey('{0x41}', True, True, True)])
+    vkeys = keyboard.get_text_to_sendkeys('mock', 67699721)
+    t.assertEqual(str(vkeys), '{LShift Down}{LControl Down}{LAlt Down}{0x41}{LShift Up}{LControl Up}{LAlt Up}{0x41}{LShift Down}{LControl Down}{LAlt Down}{0x41}{LShift Up}{LControl Up}{LAlt Up}')
 
 # test do not expose infomation into logging
 # type_password
 # send_password
+

@@ -302,10 +302,17 @@ def test_window_wait_child(mocker: pytest_mock.MockerFixture, request, automatio
         dialog = win.wait_child({'classNN': '#32770', 'pid': win.pid}, timeout= 1000, delay=500)
     t.assertEqual(str(cm.exception), "pid is not allowed in search_obj")
 
+    with t.assertRaises(Exception) as cm:
+        dialog = win.get_child({'classNN': '#32770', 'pid': win.pid})
+    t.assertEqual(str(cm.exception), "pid is not allowed in search_obj")
+
 
     with t.assertRaises(Exception) as cm:
         dialog = win.wait_child({'classNN': '#32770'}, timeout= 1000, delay=500)
     t.assertEqual(str(cm.exception), "Child window not found")
+
+    # no exception - not found
+    t.assertEqual(win.get_child({"process": "xxx"}, not_found_exception=None), None)
 
     # TODO check multiple window found
     logging.debug("------------------------------")
@@ -319,3 +326,15 @@ def test_window_wait_child(mocker: pytest_mock.MockerFixture, request, automatio
     dialog.sleep(1000).send_keys("{ESC}")
 
     notepad_close_without_save(win)
+
+
+def test_window_get_child2(mocker: pytest_mock.MockerFixture, request, automation: Automation, windows: Windows):
+    # mock self.automation.windows()._find to return multiple windows
+    def _mock_find(search_obj, include_hidden):
+        return [Window(automation, hwnd=101), Window(automation, hwnd=102)]
+    mocker.patch.object(windows, '_find', side_effect=_mock_find)
+
+    win = automation.window_from_hwnd(101)
+    with t.assertRaises(Exception) as cm:
+        win.get_child({'classNN': 'Button1'})
+    t.assertEqual(str(cm.exception), "Multiple windows found")

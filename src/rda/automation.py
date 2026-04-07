@@ -193,13 +193,20 @@ class Automation(Base):
         """
         self.press_duration = press_duration
 
+    # necesarry for testing purposes
+    _cached_windows: 'Windows'
+
     def windows(self) -> 'Windows':
         """
         Get operations over Windows at OS level
         :returns Windows
         """
+        if hasattr(self, "_cached_windows"):
+            return self._cached_windows
+
         from .windows import Windows
-        return Windows(self)
+        self._cached_windows = Windows(self)
+        return self._cached_windows
 
     def keyboard(self) -> 'Keyboard':
         from .keyboard import Keyboard

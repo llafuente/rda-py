@@ -111,7 +111,7 @@ class Window(Base):
         #: Automation config (back pointer)
         self.automation = automation
         #: window handle identifier
-        self.hwnd = int(hwnd)
+        self.hwnd = int(hwnd, 16) if isinstance(hwnd, str) else hwnd
 
     def __str__(self):
         return f'Window(hwnd = {self.hwnd})'

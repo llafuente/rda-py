@@ -25,7 +25,7 @@ class Base:
                 return
 
         # default in case of failure
-        logging.debug(f"? {locals_obj}")
+        logging.debug(f"? {locals_obj}") # pragma no cover
 
     def _debug(self, text: str):
         frame = inspect.currentframe()

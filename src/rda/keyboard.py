@@ -217,7 +217,7 @@ class Keyboard(Base):
         # Get Unicode character code
         ch = ord(letter)
         retVK = None
-        if (int(platform.architecture()[0][:2], 10) == 64):
+        if (int(platform.architecture()[0][:2], 10) == 64): # pragma no cover
             # Call VkKeyScanExW
             retVK = ctypes.windll.User32.VkKeyScanExW(
                 ctypes.c_ushort(ch),
@@ -233,7 +233,7 @@ class Keyboard(Base):
             )
 
             if retVK == -1:
-                raise Exception("VkKeyScanExA call failed")
+                raise Exception("VkKeyScanExA call failed") # pragma no cover
         print(retVK)
         vk_int = retVK & 0xFF
         print(vk_int)

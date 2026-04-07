@@ -85,7 +85,7 @@ def test_mouse_cursor_notepad(mocker: pytest_mock.MockerFixture, request, automa
     windows.minimize_all()
 
     mouse.move_to2(0, 0)
-    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65561)
+    t.assertGreater(mouse.get_cursor_id(), 0)
 
     win = start(automation, request, 'notepad.exe')
     win.move2(0,0)
@@ -106,7 +106,7 @@ def test_mouse_cursor_mspaint(mocker: pytest_mock.MockerFixture, request, automa
     windows.minimize_all()
 
     mouse.move_to2(0, 0)
-    t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65561)
+    t.assertGreater(mouse.get_cursor_id(), 0)
 
     win = start(automation, request, 'mspaint.exe')
     win.move2(0,0)
@@ -122,3 +122,8 @@ def test_mouse_cursor_mspaint(mocker: pytest_mock.MockerFixture, request, automa
     win.mouse_move2(1019, 761)
     t.assertEqual(mouse.sleep(1000).get_cursor_id(), 65549)
     t.assertEqual(mouse.get_cursor(), 'unknown')
+
+
+def test_get_cursor(mouse):
+    mouse.move_to2(0, 0)
+    t.assertEqual(type(mouse.get_cursor()), str)

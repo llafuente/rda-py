@@ -129,7 +129,7 @@ class Windows(Base):
             win.minimize()
             win2 = self.get_foreground()
             if win.hwnd == win2.hwnd or --max <= 0:
-                break
+                break # pragma no cover
             win = win2
         self.automation.action_performed()
         return self
