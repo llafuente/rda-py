@@ -16,7 +16,9 @@ class Automation(Base):
     """
         Automation configuration and the library entry point.
     """
+    #: Custom path to AutoHotKey binary sent at constructor (for debug purposes)
     ahk_executable_path: str = ''
+
     #: AutoHotKey library
     ahk: AHK
 
@@ -193,13 +195,12 @@ class Automation(Base):
         """
         self.press_duration = press_duration
 
-    # necesarry for testing purposes
+    # necesary for testing purposes
     _cached_windows: 'Windows'
-
     def windows(self) -> 'Windows':
         """
         Get operations over Windows at OS level
-        :returns Windows
+        :returns Windows instance
         """
         if hasattr(self, "_cached_windows"):
             return self._cached_windows
@@ -208,13 +209,33 @@ class Automation(Base):
         self._cached_windows = Windows(self)
         return self._cached_windows
 
+    # necesary for testing purposes
+    _cached_keyboard: 'Keyboard'
     def keyboard(self) -> 'Keyboard':
-        from .keyboard import Keyboard
-        return Keyboard(self)
+        """
+        Get operations over keyboard
+        :returns Keyboard instance
+        """
+        if hasattr(self, "_cached_keyboard"):
+            return self._cached_keyboard
 
+        from .keyboard import Keyboard
+        self._cached_keyboard = Keyboard(self)
+        return self._cached_keyboard
+
+    # necesary for testing purposes
+    _cached_mouse: 'Mouse'
     def mouse(self) -> 'Mouse':
+        """
+        Get operations over mouse
+        :returns Mouse instance
+        """
+        if hasattr(self, "_cached_mouse"):
+            return self._cached_mouse
+
         from .mouse import Mouse
-        return Mouse(self)
+        self._cached_mouse = Mouse(self)
+        return self._cached_mouse
 
     def window_from_hwnd(self, hwnd: Union[str, int]) -> 'Window':
         """
@@ -228,4 +249,7 @@ class Automation(Base):
         return Window(self, hwnd)
 
     def action_performed(self):
+        """
+        Function to be called after performing an action, to apply the configured delay.
+        """
         time.sleep(self.action_delay / 1000)

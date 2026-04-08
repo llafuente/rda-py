@@ -137,22 +137,22 @@ def test_window_images(mocker: pytest_mock.MockerFixture, request, automation: A
     win.mouse_move2(0, 0)
     color = win.get_pixel_color(500, 500)
 
-    pos = win.find_pixel_color(495, 495, 10, 10, color)
+    pos = win.find_pixel_color4(495, 495, 10, 10, color)
     # paints the next pixel
     t.assertGreater(pos[0], 0)
     t.assertGreater(pos[1], 0)
 
     win.move2(50, 50)
-    pos2 = win.find_pixel_color(495, 495, 10, 10, color)
+    pos2 = win.find_pixel_color4(495, 495, 10, 10, color)
     # paints the next pixel
     t.assertEqual(pos, pos2)
 
     #not found
     with t.assertRaises(Exception) as cm:
-        pos = win.find_pixel_color(495, 495, 10, 10, (255, 255, 255))
+        pos = win.find_pixel_color4(495, 495, 10, 10, (255, 255, 255))
     t.assertEqual(str(cm.exception), "pixel color not found")
 
-    t.assertIsNone(win.find_pixel_color(495, 495, 10, 10, (255, 255, 255), not_found_exception=None))
+    t.assertIsNone(win.find_pixel_color4(495, 495, 10, 10, (255, 255, 255), not_found_exception=None))
 
     # coverage
     win.double_click2(475, 475)

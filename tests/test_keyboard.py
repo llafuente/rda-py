@@ -51,7 +51,7 @@ def test_keyboard_virtual_keys(mocker: pytest_mock.MockerFixture, request, autom
         t.assertEqual(str(keyboard.get_text_to_sendkeys('!!!a', 67765257)), '{LShift Down}{vk31}{vk31}{vk31}{LShift Up}{vk41}')
         t.assertEqual(str(keyboard.get_text_to_sendkeys('{a', 67765257)), '{LControl Down}{LAlt Down}{vkDE}{LControl Up}{LAlt Up}{vk41}')
         t.assertEqual(str(keyboard.get_text_to_sendkeys('~a', 67765257)), '{LControl Down}{LAlt Down}{vk34}{LControl Up}{LAlt Up}{vk41}')
-    elif 67699721 in keyboards:
+    if 67699721 in keyboards:
         t.assertEqual(str(keyboard.get_letter_to_virtualkey('a', 67699721)), '{vk41}')
         t.assertEqual(str(keyboard.get_letter_to_virtualkey('{', 67699721)), '{LShift Down}{vkDB}{LShift Up}')
         t.assertEqual(str(keyboard.get_letter_to_virtualkey('!', 67699721)), '{LShift Down}{vk31}{LShift Up}')
@@ -71,7 +71,6 @@ def test_keyboard_sendkeys(mocker: pytest_mock.MockerFixture, request, automatio
 
     data = automation.ahk.get_clipboard()
     t.assertEqual(data, 'xxx{CTRL}')
-
 
     automation.ahk.set_clipboard('')
     win.minimize()

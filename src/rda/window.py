@@ -624,7 +624,7 @@ class Window(Base):
         logging.debug(f'Window.get_pixel_color({x}, {y}) <-- {color}')
         return color
 
-    def find_pixel_color(self, x: int, y: int, witdh:int, height:int, rgb_color: Tuple[int, int, int], variation:int = 0, not_found_exception: Union[Exception, None] = Exception("pixel color not found")) -> Union[Tuple[int, int], None]:
+    def find_pixel_color4(self, x: int, y: int, witdh:int, height:int, rgb_color: Tuple[int, int, int], variation:int = 0, not_found_exception: Union[Exception, None] = Exception("pixel color not found")) -> Union[Tuple[int, int], None]:
         """
         Searches for a pixel of the specified color within a defined rectangular area of the window.
 
@@ -647,8 +647,7 @@ class Window(Base):
 
         position = (pos[0]-x2, pos[1]-y2) if pos is not None else None
 
-        #logging.debug(f'find_pixel_color({x}, {y}, {witdh}, {height}, {rgb_color}) <-- {position}')
-        logging.debug(f'find_pixel_color({search_region_start}, {search_region_end}, {color_str}) <-- {position}')
+        logging.debug(f'find_pixel_color4({search_region_start}, {search_region_end}, {color_str}) <-- {position}')
 
         if pos is None and not_found_exception is not None:
             raise not_found_exception
@@ -702,7 +701,7 @@ class Window(Base):
         Waits until the specified image appears on the window.
 
         :param image_path: The file path of the image to search for.
-        :param variation: The allowed color variation (0-255) when matching the image.
+        :param variation: The allowed color variation (0-255) when matching the image. (default -1 for Automation.image_search_sensibility)
         :param not_found_exception: Exception to raise if the image is not found within the timeout
         :param timeout: Maximum time in milliseconds to wait (default -1 for Automation.TIMEOUT)
         :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
@@ -711,6 +710,7 @@ class Window(Base):
         """
 
         # Override defaults?
+        variation = variation if variation != -1 else self.automation.image_search_sensibility
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         delay = delay if delay != -1 else self.automation.DELAY
 
@@ -725,20 +725,20 @@ class Window(Base):
             delay,
             not_found_exception)
 
-    def wait_image_disappear(self, image_path: str, variation: int = 0, not_dissapear_exception: Union[Exception, None] = Exception("Image still present"), timeout: int = -1, delay: int = -1) -> bool:
+    def wait_image_disappear(self, image_path: str, variation: int = -1, not_dissapear_exception: Union[Exception, None] = Exception("Image still present"), timeout: int = -1, delay: int = -1) -> bool:
         """
         Waits until the specified image disappears from the window.
 
         :param image_path: The file path of the image to search for.
-        :param variation: The allowed color variation (0-255) when matching the image.
+        :param variation: The allowed color variation (0-255) when matching the image. (default -1 for Automation.image_search_sensibility)
         :param not_dissapear_exception: Exception to raise if the image is still present within the timeout
         :param timeout: Maximum time in milliseconds to wait (default -1 for Automation.TIMEOUT)
         :param delay: Time in milliseconds between checks (default -1 for Automation.DELAY)
 
         :return: True if the image disappeared, False otherwise.
         """
-
         # Override defaults?
+        variation = variation if variation != -1 else self.automation.image_search_sensibility
         timeout = timeout if timeout != -1 else self.automation.TIMEOUT
         delay = delay if delay != -1 else self.automation.DELAY
 

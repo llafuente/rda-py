@@ -4,52 +4,67 @@ src package
 Submodules
 ----------
 
-src.automation module
+src.rda.automation module
+-------------------------
+
+.. automodule:: src.rda.automation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+src.rda.windows module
+----------------------
+
+.. automodule:: src.rda.windows
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+src.rda.windowsearch module
+---------------------------
+
+.. automodule:: src.rda.windowsearch
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+src.rda.window module
 ---------------------
 
-.. automodule:: src.automation
+.. automodule:: src.rda.window
    :members:
    :show-inheritance:
    :undoc-members:
 
-src.windows module
-------------------
+src.rda.keyboard module
+-----------------------
 
-.. automodule:: src.windows
+.. automodule:: src.rda.keyboard
    :members:
    :show-inheritance:
    :undoc-members:
 
-src.window module
-------------------
+src.rda.mouse module
+--------------------
 
-.. automodule:: src.window
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.keyboard module
-------------------
-
-.. automodule:: src.keyboard
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
-src.mouse module
-------------------
-
-.. automodule:: src.mouse
+.. automodule:: src.rda.mouse
    :members:
    :show-inheritance:
    :undoc-members:
 
 
+src.rda.base module
+-------------------
 
-src.utils module
-------------------
+.. automodule:: src.rda.base
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
-.. automodule:: src.utils
+src.rda.utils module
+--------------------
+
+.. automodule:: src.rda.utils
    :members:
    :show-inheritance:
    :undoc-members:
@@ -58,7 +73,7 @@ src.utils module
 Module contents
 ---------------
 
-.. automodule:: src
+.. automodule:: src.rda
    :members:
    :show-inheritance:
    :undoc-members:

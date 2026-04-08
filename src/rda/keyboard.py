@@ -234,9 +234,7 @@ class Keyboard(Base):
 
             if retVK == -1:
                 raise Exception("VkKeyScanExA call failed") # pragma no cover
-        print(retVK)
         vk_int = retVK & 0xFF
-        print(vk_int)
         vk_hex = hex(vk_int)[2:].zfill(2).upper()
         vk = f"{{vk{vk_hex}}}"
         """

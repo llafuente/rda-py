@@ -1,15 +1,19 @@
 # ~Robotnik~ Robotic Desktop Automation in Python (rda-py)
 
-This project is a migration of [rda-ahk](https://github.com/llafuente/rda-ahk) at this moment.
-
-Automate desktop applications (attended an unattended) in AutoHotKey v1 using:
+Automate desktop applications (attended an unattended) in python using AutoHotKey:
 
 * *out-of-scope* Java access bridge for Java applications
 * *out-of-scope* Microsoft UI Automation for Window native application and UWP
 * Images for remote application, RDP, Citrix, Horizon (It requires an interactive desktop)
 * (OS) Mouse / Keyboard / Screen / Clipboard
 
-still in development, no usable.
+This project is a migration of [rda-ahk](https://github.com/llafuente/rda-ahk) with a narrow scope.
+
+The project if fully typed and checked with `mypy`.
+
+## Documentation
+
+
 
 ## development
 
@@ -44,6 +48,6 @@ explorer .\htmlcov\index.html
 ### Generate documentation
 
 ```bash
-sphinx-build.bat -b html .\docs\source\ .\docs\html
+sphinx-build.exe -b html .\docs\source\ .\docs\html
 explorer .\docs\html\index.html
 ```

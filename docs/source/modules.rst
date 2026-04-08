@@ -1,7 +1,7 @@
-src
+src.rda
 ===
 
 .. toctree::
    :maxdepth: 4
 
-   src
+   src.rda
